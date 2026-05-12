@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import xml.etree.ElementTree as ET
+from datetime import datetime, timezone
 from pathlib import Path
 from xml.sax.saxutils import escape as xml_escape
 
@@ -20,6 +22,8 @@ app.add_middleware(
 )
 
 STATIC_DIR = Path(__file__).parent / "static"
+ARCHIVE_DIR = Path(__file__).parent / "archive"
+ARCHIVE_DIR.mkdir(exist_ok=True)
 
 ENDPOINTS = {
     "hat_durak": "https://api.ibb.gov.tr/iett/UlasimAnaVeri/HatDurakGuzergah.asmx",
@@ -171,3 +175,112 @@ async def get_garaj():
         "GetGaraj_json",
     )
     return JSONResponse(data)
+
+
+# ===== Archive System =====
+
+ARCHIVE_ROUTES = ["86V"]  # Routes to archive
+ARCHIVE_INTERVAL = 60  # seconds between snapshots
+
+
+def _archive_path(hat_kodu: str, date_str: str) -> Path:
+    return ARCHIVE_DIR / f"{hat_kodu}_{date_str}.jsonl"
+
+
+async def _archive_snapshot():
+    """Save a snapshot of vehicle positions for archived routes."""
+    now = datetime.now(timezone.utc)
+    date_str = now.strftime("%Y-%m-%d")
+    ts = now.isoformat()
+
+    for route in ARCHIVE_ROUTES:
+        try:
+            data = await _soap_call_json(
+                ENDPOINTS["sefer"],
+                "GetHatOtoKonum_json",
+                f"<tns:HatKodu>{xml_escape(route)}</tns:HatKodu>",
+            )
+            if not data:
+                continue
+            record = {"ts": ts, "hat": route, "araclar": data}
+            path = _archive_path(route, date_str)
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(record, ensure_ascii=False) + "\n")
+        except Exception:
+            pass
+
+
+async def _archive_loop():
+    """Background task that periodically archives vehicle positions."""
+    while True:
+        await _archive_snapshot()
+        await asyncio.sleep(ARCHIVE_INTERVAL)
+
+
+@app.on_event("startup")
+async def start_archiver():
+    asyncio.create_task(_archive_loop())
+
+
+@app.get("/api/arsiv/tarihler")
+async def get_archive_dates(hat_kodu: str = Query("86V", description="Hat kodu")):
+    """List available archive dates for a route."""
+    dates = []
+    for f in sorted(ARCHIVE_DIR.glob(f"{hat_kodu}_*.jsonl")):
+        date_part = f.stem.replace(f"{hat_kodu}_", "")
+        dates.append(date_part)
+    return JSONResponse(dates)
+
+
+@app.get("/api/arsiv")
+async def get_archive(
+    hat_kodu: str = Query("86V", description="Hat kodu"),
+    tarih: str = Query("", description="Tarih (YYYY-MM-DD)"),
+):
+    """Get archived vehicle snapshots for a route and date."""
+    if not tarih:
+        tarih = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    path = _archive_path(hat_kodu, tarih)
+    if not path.exists():
+        return JSONResponse([])
+    records = []
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                records.append(json.loads(line))
+    return JSONResponse(records)
+
+
+@app.get("/api/arsiv/arac")
+async def get_archive_vehicle(
+    hat_kodu: str = Query("86V", description="Hat kodu"),
+    tarih: str = Query("", description="Tarih (YYYY-MM-DD)"),
+    kapi_no: str = Query("", description="Kapı no"),
+):
+    """Get archived positions for a specific vehicle."""
+    if not tarih:
+        tarih = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    path = _archive_path(hat_kodu, tarih)
+    if not path.exists():
+        return JSONResponse([])
+    vehicle_history: list[dict] = []
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            record = json.loads(line)
+            for v in record.get("araclar", []):
+                if kapi_no and v.get("kapino") != kapi_no:
+                    continue
+                vehicle_history.append({
+                    "ts": record["ts"],
+                    "kapino": v.get("kapino"),
+                    "enlem": v.get("enlem"),
+                    "boylam": v.get("boylam"),
+                    "yon": v.get("yon"),
+                    "hatkodu": v.get("hatkodu"),
+                    "yakinDurakKodu": v.get("yakinDurakKodu"),
+                })
+    return JSONResponse(vehicle_history)

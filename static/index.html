@@ -443,6 +443,29 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 }
 .adv-field input:focus { border-color: var(--primary); }
 
+/* Archive controls */
+.archive-controls {
+  padding: 10px 16px;
+  background: #f5f0ff;
+  border-bottom: 1px solid var(--border);
+}
+.archive-vehicle-item {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.archive-vehicle-item .av-time {
+  font-weight: 700;
+  color: var(--primary);
+  min-width: 60px;
+}
+.archive-vehicle-item .av-plate {
+  font-weight: 600;
+}
+
 /* Tracking info banner */
 .tracking-banner {
   padding: 10px 16px;
@@ -546,6 +569,9 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
       <div class="tab" data-tab="announcements" onclick="switchTab('announcements')">
         <i class="fas fa-bullhorn"></i> Duyurular
       </div>
+      <div class="tab" data-tab="archive" onclick="switchTab('archive')">
+        <i class="fas fa-archive"></i> Arşiv
+      </div>
     </div>
 
     <div class="sidebar-content">
@@ -584,6 +610,54 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
           <div class="spinner"></div> Duyurular yükleniyor...
         </div>
         <div id="announcements-list"></div>
+      </div>
+
+      <!-- Archive panel -->
+      <div id="panel-archive" class="panel">
+        <div class="archive-controls">
+          <div class="adv-search-title"><i class="fas fa-archive"></i> Araç Konum Arşivi</div>
+          <div class="adv-row">
+            <div class="adv-field">
+              <label>Hat No</label>
+              <input type="text" id="archiveHat" value="86V" placeholder="86V" />
+            </div>
+            <div class="adv-field">
+              <label>Tarih (YYYY-MM-DD)</label>
+              <input type="date" id="archiveTarih" />
+            </div>
+          </div>
+          <div class="adv-row">
+            <div class="adv-field">
+              <label>Kapı No (opsiyonel)</label>
+              <input type="text" id="archiveKapi" placeholder="A-244" />
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="loadArchive()" style="width:100%;margin-top:6px">
+            <i class="fas fa-search"></i> Arşiv Ara
+          </button>
+        </div>
+        <div class="loading" id="archive-loading" style="display:none">
+          <div class="spinner"></div> Arşiv yükleniyor...
+        </div>
+        <div id="archive-info" style="padding:8px 16px;font-size:12px;color:var(--text-secondary);display:none"></div>
+        <div id="archive-timeline" style="padding:8px 16px;display:none">
+          <label style="font-size:11px;font-weight:600;color:var(--text-secondary)">Zaman Çizelgesi</label>
+          <input type="range" id="archiveSlider" min="0" max="0" value="0" style="width:100%" oninput="showArchiveFrame(this.value)" />
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-secondary)">
+            <span id="archiveTimeStart">-</span>
+            <span id="archiveTimeCurrent" style="font-weight:700;color:var(--primary)">-</span>
+            <span id="archiveTimeEnd">-</span>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:6px">
+            <button class="btn btn-sm" id="archivePlayBtn" onclick="toggleArchivePlay()">
+              <i class="fas fa-play"></i> Oynat
+            </button>
+            <button class="btn btn-sm" onclick="showArchiveFrame(0);document.getElementById('archiveSlider').value=0">
+              <i class="fas fa-step-backward"></i> Başa
+            </button>
+          </div>
+        </div>
+        <div id="archive-list"></div>
       </div>
     </div>
 
@@ -1078,6 +1152,7 @@ function switchTab(name) {
   );
 
   if (name === 'announcements') loadAnnouncements();
+  if (name !== 'archive' && typeof clearArchiveMarkers === 'function') clearArchiveMarkers();
 }
 
 function filterStops(dir) {
@@ -1158,7 +1233,7 @@ function formatTime(ts) {
 }
 
 function escHtml(str) {
-  return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
 }
 
 // ===== Enter key search =====
@@ -1181,7 +1256,7 @@ async function advancedSearch() {
   const detail = document.getElementById('trackingDetail');
   const status = document.getElementById('trackingStatus');
   banner.classList.add('visible');
-  detail.innerHTML = `<b>Hat:</b> ${hatKodu} | <b>Kapı No:</b> ${kapiNo || '-'} | <b>Tarih:</b> ${tarih || '-'}`;
+  detail.textContent = `Hat: ${hatKodu} | Kapı No: ${kapiNo || '-'} | Tarih: ${tarih || '-'}`;
   status.textContent = 'Aranıyor...';
 
   // Search route
@@ -1225,7 +1300,7 @@ initMap();
   const detail = document.getElementById('trackingDetail');
   const status = document.getElementById('trackingStatus');
   banner.classList.add('visible');
-  detail.innerHTML = '<b>Hat:</b> 86V | <b>Kapı No:</b> A-244 | <b>Tarih:</b> 28.04.2026';
+  detail.textContent = 'Hat: 86V | Kapı No: A-244 | Tarih: 28.04.2026';
   status.textContent = 'Yükleniyor...';
 
   showLoading('routes');
@@ -1247,6 +1322,181 @@ initMap();
   } catch (e) { console.error(e); }
   hideLoading('routes');
 })();
+
+// ===== Archive System =====
+let archiveData = [];
+let archiveMarkers = [];
+let archivePlayInterval = null;
+
+async function loadArchive() {
+  const hatKodu = document.getElementById('archiveHat').value.trim().toUpperCase();
+  const tarih = document.getElementById('archiveTarih').value;
+  const kapiNo = document.getElementById('archiveKapi').value.trim().toUpperCase();
+
+  if (!hatKodu) return;
+
+  showLoading('archive');
+  document.getElementById('archive-info').style.display = 'none';
+  document.getElementById('archive-timeline').style.display = 'none';
+  document.getElementById('archive-list').innerHTML = '';
+
+  try {
+    let url;
+    if (kapiNo) {
+      url = `/api/arsiv/arac?hat_kodu=${encodeURIComponent(hatKodu)}&kapi_no=${encodeURIComponent(kapiNo)}`;
+    } else {
+      url = `/api/arsiv?hat_kodu=${encodeURIComponent(hatKodu)}`;
+    }
+    if (tarih) url += `&tarih=${encodeURIComponent(tarih)}`;
+
+    const data = await api(url);
+    archiveData = data;
+
+    if (!data.length) {
+      const info = document.getElementById('archive-info');
+      info.style.display = 'block';
+      info.textContent = 'Bu tarih ve hat için arşiv verisi bulunamadı. Arşiv sistemi aktif — veriler dakika başı kaydediliyor.';
+      hideLoading('archive');
+      return;
+    }
+
+    if (kapiNo) {
+      displayArchiveVehicleHistory(data);
+    } else {
+      displayArchiveTimeline(data);
+    }
+  } catch (e) {
+    console.error(e);
+    document.getElementById('archive-info').style.display = 'block';
+    document.getElementById('archive-info').textContent = 'Arşiv yüklenirken hata oluştu.';
+  }
+  hideLoading('archive');
+}
+
+function displayArchiveTimeline(records) {
+  const info = document.getElementById('archive-info');
+  info.style.display = 'block';
+  info.textContent = `${records.length} kayıt bulundu. Zaman çizelgesini kullanarak geçmiş konumları görüntüleyin.`;
+
+  const timeline = document.getElementById('archive-timeline');
+  timeline.style.display = 'block';
+
+  const slider = document.getElementById('archiveSlider');
+  slider.max = records.length - 1;
+  slider.value = 0;
+
+  const first = new Date(records[0].ts);
+  const last = new Date(records[records.length - 1].ts);
+  document.getElementById('archiveTimeStart').textContent = first.toLocaleTimeString('tr-TR');
+  document.getElementById('archiveTimeEnd').textContent = last.toLocaleTimeString('tr-TR');
+
+  showArchiveFrame(0);
+}
+
+function showArchiveFrame(idx) {
+  idx = parseInt(idx);
+  if (!archiveData.length || idx >= archiveData.length) return;
+
+  const record = archiveData[idx];
+  const vehicles = record.araclar || [];
+  const ts = new Date(record.ts);
+
+  document.getElementById('archiveTimeCurrent').textContent = ts.toLocaleTimeString('tr-TR');
+
+  clearArchiveMarkers();
+  const bounds = [];
+  vehicles.forEach(v => {
+    const lat = parseFloat(v.enlem);
+    const lng = parseFloat(v.boylam);
+    if (isNaN(lat) || isNaN(lng)) return;
+    const marker = L.marker([lat, lng], { icon: busIcon('#9c27b0', 28) })
+      .bindPopup(`<div class="popup-title"><i class="fas fa-bus"></i> ${escHtml(v.kapino || '')}</div>
+        <div class="popup-detail"><b>Zaman:</b> ${ts.toLocaleString('tr-TR')}<br><b>Yön:</b> ${v.yon || '-'}</div>`)
+      .addTo(map);
+    archiveMarkers.push(marker);
+    bounds.push([lat, lng]);
+  });
+
+  if (bounds.length) map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+
+  const list = document.getElementById('archive-list');
+  list.innerHTML = `<div style="padding:8px 16px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border)">
+    <b>${ts.toLocaleString('tr-TR')}</b> — ${vehicles.length} araç</div>` +
+    vehicles.map(v => `<div class="archive-vehicle-item">
+      <span class="av-plate">${escHtml(v.kapino || '')}</span>
+      <span style="color:var(--text-secondary)">${v.yon || '-'}</span>
+    </div>`).join('');
+}
+
+function displayArchiveVehicleHistory(records) {
+  const info = document.getElementById('archive-info');
+  info.style.display = 'block';
+  info.textContent = `${records.length} konum kaydı bulundu.`;
+
+  clearArchiveMarkers();
+  const coords = [];
+  records.forEach((r, i) => {
+    const lat = parseFloat(r.enlem);
+    const lng = parseFloat(r.boylam);
+    if (isNaN(lat) || isNaN(lng)) return;
+    coords.push([lat, lng]);
+    const ts = new Date(r.ts);
+    const marker = L.circleMarker([lat, lng], {
+      radius: 5, fillColor: '#9c27b0', fillOpacity: 0.7, color: '#7b1fa2', weight: 1
+    }).bindPopup(`<div class="popup-title">${escHtml(r.kapino || '')}</div>
+      <div class="popup-detail"><b>Zaman:</b> ${ts.toLocaleString('tr-TR')}<br><b>Yön:</b> ${r.yon || '-'}</div>`)
+      .addTo(map);
+    archiveMarkers.push(marker);
+  });
+
+  if (coords.length > 1) {
+    const line = L.polyline(coords, { color: '#9c27b0', weight: 3, opacity: 0.6, dashArray: '5,5' }).addTo(map);
+    archiveMarkers.push(line);
+    map.fitBounds(line.getBounds(), { padding: [50, 50] });
+  } else if (coords.length === 1) {
+    map.setView(coords[0], 15);
+  }
+
+  const list = document.getElementById('archive-list');
+  list.innerHTML = records.map(r => {
+    const ts = new Date(r.ts);
+    return `<div class="archive-vehicle-item">
+      <span class="av-time">${ts.toLocaleTimeString('tr-TR')}</span>
+      <span class="av-plate">${escHtml(r.kapino || '')}</span>
+      <span style="color:var(--text-secondary)">${r.yon || '-'}</span>
+    </div>`;
+  }).join('');
+}
+
+function clearArchiveMarkers() {
+  archiveMarkers.forEach(m => m.remove());
+  archiveMarkers = [];
+}
+
+function toggleArchivePlay() {
+  if (archivePlayInterval) {
+    clearInterval(archivePlayInterval);
+    archivePlayInterval = null;
+    document.getElementById('archivePlayBtn').innerHTML = '<i class="fas fa-play"></i> Oynat';
+    return;
+  }
+  document.getElementById('archivePlayBtn').innerHTML = '<i class="fas fa-pause"></i> Durdur';
+  const slider = document.getElementById('archiveSlider');
+  archivePlayInterval = setInterval(() => {
+    let val = parseInt(slider.value) + 1;
+    if (val > parseInt(slider.max)) {
+      clearInterval(archivePlayInterval);
+      archivePlayInterval = null;
+      document.getElementById('archivePlayBtn').innerHTML = '<i class="fas fa-play"></i> Oynat';
+      return;
+    }
+    slider.value = val;
+    showArchiveFrame(val);
+  }, 1000);
+}
+
+// Set default archive date to today
+document.getElementById('archiveTarih').valueAsDate = new Date();
 </script>
 </body>
 </html>
