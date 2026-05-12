@@ -385,6 +385,91 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
   transition: all 0.2s;
 }
 .dir-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+/* Tracked vehicle highlight */
+.vehicle-item.tracked {
+  background: #fff3e0;
+  border-left: 3px solid #ff6d00;
+}
+.vehicle-item.tracked .vehicle-icon {
+  background: #ff6d00;
+}
+.tracked-badge {
+  background: #ff6d00;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Advanced search form */
+.adv-search {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: #f0f4ff;
+}
+.adv-search-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.adv-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.adv-field {
+  flex: 1;
+}
+.adv-field label {
+  display: block;
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+  font-weight: 600;
+}
+.adv-field input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  outline: none;
+}
+.adv-field input:focus { border-color: var(--primary); }
+
+/* Tracking info banner */
+.tracking-banner {
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #ff6d00, #ff9100);
+  color: white;
+  font-size: 12px;
+  display: none;
+}
+.tracking-banner.visible { display: block; }
+.tracking-banner .tb-title {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.tracking-banner .tb-detail {
+  opacity: 0.9;
+  font-size: 11px;
+}
+.tracking-banner .tb-status {
+  margin-top: 6px;
+  padding: 3px 8px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 4px;
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+}
 </style>
 </head>
 <body>
@@ -399,6 +484,13 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     <div class="sidebar-header">
       <h1><i class="fas fa-bus"></i> İETT Araç Takip</h1>
       <p>İstanbul Toplu Taşıma Canlı Takip Sistemi</p>
+    </div>
+
+    <!-- Tracking banner -->
+    <div class="tracking-banner" id="trackingBanner">
+      <div class="tb-title"><i class="fas fa-crosshairs"></i> Araç Takip Aktif</div>
+      <div class="tb-detail" id="trackingDetail"></div>
+      <div class="tb-status" id="trackingStatus"></div>
     </div>
 
     <div class="search-box">
@@ -417,6 +509,28 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
           <i class="fas fa-bus"></i> Tüm Filo
         </button>
       </div>
+    </div>
+
+    <!-- Advanced search -->
+    <div class="adv-search">
+      <div class="adv-search-title"><i class="fas fa-filter"></i> Detaylı Arama</div>
+      <div class="adv-row">
+        <div class="adv-field">
+          <label>Hat No</label>
+          <input type="text" id="advHat" value="86V" placeholder="86V" />
+        </div>
+        <div class="adv-field">
+          <label>Kapı No</label>
+          <input type="text" id="advKapi" value="A-244" placeholder="A-244" />
+        </div>
+        <div class="adv-field">
+          <label>Tarih</label>
+          <input type="text" id="advTarih" value="28.04.2026" placeholder="28.04.2026" />
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="advancedSearch()" style="width:100%">
+        <i class="fas fa-search-location"></i> Araç Takip Et
+      </button>
     </div>
 
     <div class="tabs">
@@ -542,6 +656,7 @@ let refreshInterval = null;
 let showStops = true;
 let showRoute = true;
 let allRoutes = [];
+let trackedVehicle = null; // Kapı No to highlight
 
 // ===== Map Init =====
 function initMap() {
@@ -556,20 +671,20 @@ function initMap() {
 }
 
 // ===== Bus Icon =====
-function busIcon(color = '#1a73e8') {
+function busIcon(color = '#1a73e8', size = 32) {
   return L.divIcon({
     className: 'bus-marker',
     html: `<div style="
       background:${color};
-      width:32px;height:32px;border-radius:50%;
+      width:${size}px;height:${size}px;border-radius:50%;
       display:flex;align-items:center;justify-content:center;
-      color:white;font-size:14px;
-      border:3px solid white;
-      box-shadow:0 2px 6px rgba(0,0,0,0.3);
+      color:white;font-size:${size > 32 ? 18 : 14}px;
+      border:3px solid ${color === '#ff6d00' ? '#fff3e0' : 'white'};
+      box-shadow:0 2px ${color === '#ff6d00' ? '12' : '6'}px rgba(0,0,0,${color === '#ff6d00' ? '0.5' : '0.3'});
     "><i class='fas fa-bus'></i></div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -16]
+    iconSize: [size, size],
+    iconAnchor: [size/2, size/2],
+    popupAnchor: [0, -size/2]
   });
 }
 
@@ -644,7 +759,7 @@ function displayRoutes(routes) {
   }
 
   list.innerHTML = routes.map(r => `
-    <div class="route-item" onclick="selectRoute('${r.SHATKODU}','${escHtml(r.SHATADI)}')">
+    <div class="route-item" onclick="selectRoute('${escHtml(r.SHATKODU)}','${escHtml(r.SHATADI)}')">
       <span class="route-code">${r.SHATKODU}</span>
       <span class="route-name">${r.SHATADI}</span>
       <div class="route-meta">
@@ -716,11 +831,23 @@ function displayVehicles(vehicles) {
     return;
   }
 
-  list.innerHTML = vehicles.map(v => `
-    <div class="vehicle-item" onclick="focusVehicle(${v.enlem},${v.boylam},'${v.kapino}')">
+  // Sort tracked vehicle to top
+  const sorted = [...vehicles].sort((a, b) => {
+    if (trackedVehicle) {
+      const aT = a.kapino === trackedVehicle ? -1 : 0;
+      const bT = b.kapino === trackedVehicle ? -1 : 0;
+      if (aT !== bT) return aT - bT;
+    }
+    return 0;
+  });
+
+  list.innerHTML = sorted.map(v => {
+    const isTracked = trackedVehicle && v.kapino === trackedVehicle;
+    return `
+    <div class="vehicle-item${isTracked ? ' tracked' : ''}" onclick="focusVehicle(${v.enlem},${v.boylam},'${escHtml(v.kapino)}')">
       <div class="vehicle-icon"><i class="fas fa-bus"></i></div>
       <div class="vehicle-info">
-        <div class="vehicle-plate">${v.kapino}</div>
+        <div class="vehicle-plate">${v.kapino} ${isTracked ? '<span class="tracked-badge">TAKİP</span>' : ''}</div>
         <div class="vehicle-detail">
           <i class="fas fa-compass"></i> ${v.yon || ''}
         </div>
@@ -728,23 +855,27 @@ function displayVehicles(vehicles) {
           <i class="fas fa-clock"></i> ${formatTime(v.son_konum_zamani)}
         </div>
       </div>
-      <span class="vehicle-status status-active">Aktif</span>
+      <span class="vehicle-status status-active">${isTracked ? 'Takip' : 'Aktif'}</span>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function plotVehicles(vehicles) {
   clearVehicles();
   const bounds = [];
+  let trackedMarker = null;
 
   vehicles.forEach(v => {
     const lat = parseFloat(v.enlem);
     const lng = parseFloat(v.boylam);
     if (isNaN(lat) || isNaN(lng)) return;
 
-    const marker = L.marker([lat, lng], { icon: busIcon() })
+    const isTracked = trackedVehicle && v.kapino === trackedVehicle;
+    const icon = isTracked ? busIcon('#ff6d00', 42) : busIcon();
+    const marker = L.marker([lat, lng], { icon, zIndexOffset: isTracked ? 1000 : 0 })
       .bindPopup(`
-        <div class="popup-title"><i class="fas fa-bus"></i> ${v.kapino}</div>
+        <div class="popup-title"><i class="fas fa-bus"></i> ${v.kapino} ${isTracked ? '<span class="tracked-badge">TAKİP EDİLİYOR</span>' : ''}</div>
         <div class="popup-detail">
           <b>Hat:</b> ${v.hatkodu}<br>
           <b>Yön:</b> ${v.yon}<br>
@@ -756,9 +887,14 @@ function plotVehicles(vehicles) {
 
     vehicleMarkers.push(marker);
     bounds.push([lat, lng]);
+    if (isTracked) trackedMarker = marker;
   });
 
-  if (bounds.length > 0) {
+  if (trackedMarker) {
+    const ll = trackedMarker.getLatLng();
+    map.setView([ll.lat, ll.lng], 15);
+    trackedMarker.openPopup();
+  } else if (bounds.length > 0) {
     map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
   }
 }
@@ -1030,9 +1166,87 @@ document.getElementById('searchInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') searchRoute();
 });
 
+// ===== Advanced Search =====
+async function advancedSearch() {
+  const hatKodu = document.getElementById('advHat').value.trim().toUpperCase();
+  const kapiNo = document.getElementById('advKapi').value.trim().toUpperCase();
+  const tarih = document.getElementById('advTarih').value.trim();
+
+  if (!hatKodu) return;
+
+  trackedVehicle = kapiNo || null;
+
+  // Show tracking banner
+  const banner = document.getElementById('trackingBanner');
+  const detail = document.getElementById('trackingDetail');
+  const status = document.getElementById('trackingStatus');
+  banner.classList.add('visible');
+  detail.innerHTML = `<b>Hat:</b> ${hatKodu} | <b>Kapı No:</b> ${kapiNo || '-'} | <b>Tarih:</b> ${tarih || '-'}`;
+  status.textContent = 'Aranıyor...';
+
+  // Search route
+  document.getElementById('searchInput').value = hatKodu;
+  showLoading('routes');
+  try {
+    const data = await api(`/api/hat?kod=${encodeURIComponent(hatKodu)}`);
+    if (data.length > 0) {
+      displayRoutes(data);
+      await selectRoute(data[0].SHATKODU, data[0].SHATADI);
+
+      // Check if tracked vehicle is found
+      if (kapiNo) {
+        const found = currentVehicles.find(v => v.kapino === kapiNo);
+        if (found) {
+          status.textContent = `${kapiNo} bulundu - Canlı takip aktif`;
+          status.style.background = 'rgba(76,175,80,0.3)';
+        } else {
+          status.textContent = `${kapiNo} şu an hatta aktif değil - Bekleniyor...`;
+          status.style.background = 'rgba(255,255,255,0.2)';
+        }
+      }
+    } else {
+      status.textContent = 'Hat bulunamadı';
+      status.style.background = 'rgba(244,67,54,0.3)';
+    }
+  } catch (e) {
+    console.error(e);
+    status.textContent = 'Hata oluştu';
+  }
+  hideLoading('routes');
+}
+
 // ===== Init =====
 initMap();
-loadPopularRoutes();
+
+// Auto-load 86V with A-244 tracking
+(async function() {
+  trackedVehicle = 'A-244';
+  const banner = document.getElementById('trackingBanner');
+  const detail = document.getElementById('trackingDetail');
+  const status = document.getElementById('trackingStatus');
+  banner.classList.add('visible');
+  detail.innerHTML = '<b>Hat:</b> 86V | <b>Kapı No:</b> A-244 | <b>Tarih:</b> 28.04.2026';
+  status.textContent = 'Yükleniyor...';
+
+  showLoading('routes');
+  try {
+    const data = await api('/api/hat?kod=86V');
+    if (data.length > 0) {
+      displayRoutes(data);
+      await selectRoute(data[0].SHATKODU, data[0].SHATADI);
+
+      const found = currentVehicles.find(v => v.kapino === 'A-244');
+      if (found) {
+        status.textContent = 'A-244 bulundu - Canlı takip aktif';
+        status.style.background = 'rgba(76,175,80,0.3)';
+      } else {
+        status.textContent = 'A-244 şu an hatta aktif değil - Otomatik takip devam ediyor';
+        status.style.background = 'rgba(255,255,255,0.2)';
+      }
+    }
+  } catch (e) { console.error(e); }
+  hideLoading('routes');
+})();
 </script>
 </body>
 </html>

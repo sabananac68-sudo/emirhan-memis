@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from xml.sax.saxutils import escape as xml_escape
 
 import httpx
 from fastapi import FastAPI, Query
@@ -100,7 +101,7 @@ async def get_hat(kod: str = Query("", description="Hat kodu (boş=tümü)")):
     data = await _soap_call_json(
         ENDPOINTS["hat_durak"],
         "GetHat_json",
-        f"<tns:HatKodu>{kod}</tns:HatKodu>",
+        f"<tns:HatKodu>{xml_escape(kod)}</tns:HatKodu>",
     )
     return JSONResponse(data)
 
@@ -110,7 +111,7 @@ async def get_durak(kod: str = Query("", description="Durak kodu (boş=tümü)")
     data = await _soap_call_json(
         ENDPOINTS["hat_durak"],
         "GetDurak_json",
-        f"<tns:DurakKodu>{kod}</tns:DurakKodu>",
+        f"<tns:DurakKodu>{xml_escape(kod)}</tns:DurakKodu>",
     )
     return JSONResponse(data)
 
@@ -120,7 +121,7 @@ async def get_durak_detay(hat_kodu: str = Query(..., description="Hat kodu")):
     data = await _soap_call_xml(
         ENDPOINTS["ibb"],
         "DurakDetay_GYY",
-        f"<tns:hat_kodu>{hat_kodu}</tns:hat_kodu>",
+        f"<tns:hat_kodu>{xml_escape(hat_kodu)}</tns:hat_kodu>",
     )
     return JSONResponse(data)
 
@@ -130,7 +131,7 @@ async def get_arac_konum(hat_kodu: str = Query(..., description="Hat kodu")):
     data = await _soap_call_json(
         ENDPOINTS["sefer"],
         "GetHatOtoKonum_json",
-        f"<tns:HatKodu>{hat_kodu}</tns:HatKodu>",
+        f"<tns:HatKodu>{xml_escape(hat_kodu)}</tns:HatKodu>",
     )
     return JSONResponse(data)
 
@@ -158,7 +159,7 @@ async def get_planlanan_sefer(hat_kodu: str = Query(..., description="Hat kodu")
     data = await _soap_call_json(
         ENDPOINTS["planlanan"],
         "GetPlanlananSeferSaati_json",
-        f"<tns:HatKodu>{hat_kodu}</tns:HatKodu>",
+        f"<tns:HatKodu>{xml_escape(hat_kodu)}</tns:HatKodu>",
     )
     return JSONResponse(data)
 
