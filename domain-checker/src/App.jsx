@@ -4,6 +4,7 @@ import Hero from './components/Hero';
 import Results from './components/Results';
 import Extensions from './components/Extensions';
 import Pricing from './components/Pricing';
+import AISuggestions from './components/AISuggestions';
 import FAQ from './components/FAQ';
 import Footer from './components/Footer';
 import './App.css';
@@ -31,6 +32,7 @@ function App() {
       <div ref={resultsRef}>
         <Results searchQuery={searchQuery} onNewSearch={handleNewSearch} />
       </div>
+      <AISuggestions onSearch={handleSearch} />
       <Extensions onSearch={handleSearch} />
       <Pricing />
       <FAQ />
