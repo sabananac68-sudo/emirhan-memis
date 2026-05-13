@@ -1,0 +1,108 @@
+.footer {
+  background: var(--dark);
+  padding: 60px 0 0;
+  color: var(--gray-300);
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 40px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--white);
+  margin-bottom: 12px;
+}
+
+.footer-logo i {
+  color: var(--primary-light);
+}
+
+.footer-brand p {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  margin-bottom: 20px;
+  color: var(--gray-400);
+}
+
+.social-links {
+  display: flex;
+  gap: 12px;
+}
+
+.social-links a {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--gray-400);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.social-links a:hover {
+  background: var(--primary);
+  color: var(--white);
+}
+
+.footer-links h4 {
+  color: var(--white);
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.footer-links a {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--gray-400);
+  padding: 6px 0;
+  transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+  color: var(--primary-light);
+}
+
+.footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 0;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.footer-bottom p {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+}
+
+.payment-methods {
+  display: flex;
+  gap: 12px;
+  font-size: 1.5rem;
+  color: var(--gray-500);
+}
+
+@media (max-width: 768px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+  }
+
+  .footer-brand {
+    grid-column: 1 / -1;
+  }
+}
