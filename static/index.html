@@ -544,11 +544,11 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
         </div>
         <div class="adv-field">
           <label>Kapı No</label>
-          <input type="text" id="advKapi" value="A-244" placeholder="A-244" />
+          <input type="text" id="advKapi" value="" placeholder="Kapı No (opsiyonel)" />
         </div>
         <div class="adv-field">
           <label>Tarih</label>
-          <input type="text" id="advTarih" value="28.04.2026" placeholder="28.04.2026" />
+          <input type="text" id="advTarih" value="28.04.2026 20:00" placeholder="28.04.2026 20:00" />
         </div>
       </div>
       <button class="btn btn-primary" onclick="advancedSearch()" style="width:100%">
@@ -629,7 +629,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
           <div class="adv-row">
             <div class="adv-field">
               <label>Kapı No (opsiyonel)</label>
-              <input type="text" id="archiveKapi" placeholder="A-244" />
+              <input type="text" id="archiveKapi" placeholder="Kapı No (opsiyonel)" />
             </div>
           </div>
           <button class="btn btn-primary" onclick="loadArchive()" style="width:100%;margin-top:6px">
@@ -1293,14 +1293,14 @@ async function advancedSearch() {
 // ===== Init =====
 initMap();
 
-// Auto-load 86V with A-244 tracking
+// Auto-load 86V route
 (async function() {
-  trackedVehicle = 'A-244';
+  trackedVehicle = null;
   const banner = document.getElementById('trackingBanner');
   const detail = document.getElementById('trackingDetail');
   const status = document.getElementById('trackingStatus');
   banner.classList.add('visible');
-  detail.textContent = 'Hat: 86V | Kapı No: A-244 | Tarih: 28.04.2026';
+  detail.textContent = 'Hat: 86V | Tarih: 28.04.2026 20:00';
   status.textContent = 'Yükleniyor...';
 
   showLoading('routes');
@@ -1310,12 +1310,12 @@ initMap();
       displayRoutes(data);
       await selectRoute(data[0].SHATKODU, data[0].SHATADI);
 
-      const found = currentVehicles.find(v => v.kapino === 'A-244');
-      if (found) {
-        status.textContent = 'A-244 bulundu - Canlı takip aktif';
+      const count = currentVehicles.length;
+      if (count > 0) {
+        status.textContent = count + ' araç aktif - Canlı takip devam ediyor';
         status.style.background = 'rgba(76,175,80,0.3)';
       } else {
-        status.textContent = 'A-244 şu an hatta aktif değil - Otomatik takip devam ediyor';
+        status.textContent = 'Şu an hatta aktif araç yok';
         status.style.background = 'rgba(255,255,255,0.2)';
       }
     }
