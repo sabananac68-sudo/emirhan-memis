@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import json
+import random
+import string
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from pathlib import Path
@@ -250,6 +252,116 @@ async def get_archive(
             if line:
                 records.append(json.loads(line))
     return JSONResponse(records)
+
+
+# ===== Fleet Generator =====
+
+# İkitelli Garajı area bounding box for random positions
+_IKITELLI_LAT_MIN = 41.050
+_IKITELLI_LAT_MAX = 41.090
+_IKITELLI_LNG_MIN = 28.770
+_IKITELLI_LNG_MAX = 28.830
+
+# Istanbul route corridor for spreading vehicles
+_ROUTE_CORRIDORS = [
+    # İkitelli - Beylikdüzü corridor
+    {"lat_min": 41.010, "lat_max": 41.070, "lng_min": 28.630, "lng_max": 28.830},
+    # İkitelli - Mecidiyeköy corridor
+    {"lat_min": 41.050, "lat_max": 41.110, "lng_min": 28.830, "lng_max": 29.020},
+    # İkitelli - Bağcılar - Aksaray corridor
+    {"lat_min": 41.010, "lat_max": 41.060, "lng_min": 28.830, "lng_max": 28.960},
+    # İkitelli - Eminönü corridor
+    {"lat_min": 41.000, "lat_max": 41.050, "lng_min": 28.940, "lng_max": 29.000},
+]
+
+
+def _generate_plate() -> str:
+    """Generate a random Istanbul bus plate: 34 XX 1234 format."""
+    letters = random.choices(string.ascii_uppercase, k=random.choice([2, 3]))
+    if len(letters) == 2:
+        num = random.randint(1000, 9999)
+    else:
+        num = random.randint(10, 999)
+    return f"34 {''.join(letters)} {num}"
+
+
+def _generate_fleet(
+    model: str = "AKİA ULTRA LF 12",
+    model_year: int = 2024,
+    garage: str = "İKİTELLİ GARAJI",
+    kapi_start: int = 3151,
+    kapi_end: int = 3281,
+    kapi_prefix: str = "A",
+) -> list[dict]:
+    """Generate a fleet of vehicles with random plates and positions."""
+    count = kapi_end - kapi_start
+    vehicles = []
+    used_plates: set[str] = set()
+
+    for i in range(count):
+        kapi_no = f"{kapi_prefix}{kapi_start + i}"
+
+        # Generate unique plate
+        plate = _generate_plate()
+        while plate in used_plates:
+            plate = _generate_plate()
+        used_plates.add(plate)
+
+        # Randomly place vehicle: 30% in garage, 70% on routes
+        if random.random() < 0.3:
+            lat = random.uniform(_IKITELLI_LAT_MIN, _IKITELLI_LAT_MAX)
+            lng = random.uniform(_IKITELLI_LNG_MIN, _IKITELLI_LNG_MAX)
+            status = "Garajda"
+        else:
+            corridor = random.choice(_ROUTE_CORRIDORS)
+            lat = random.uniform(corridor["lat_min"], corridor["lat_max"])
+            lng = random.uniform(corridor["lng_min"], corridor["lng_max"])
+            status = "Seferde"
+
+        yon = random.choice(["G", "D"])
+
+        vehicles.append({
+            "kapiNo": kapi_no,
+            "plaka": plate,
+            "model": model,
+            "modelYil": model_year,
+            "garaj": garage,
+            "tip": "Solo",
+            "enlem": round(lat, 6),
+            "boylam": round(lng, 6),
+            "yon": "Gidiş" if yon == "G" else "Dönüş",
+            "durum": status,
+            "hiz": random.randint(0, 60) if status == "Seferde" else 0,
+        })
+
+    return vehicles
+
+
+@app.get("/api/filo/generate")
+async def generate_fleet(
+    model: str = Query("AKİA ULTRA LF 12", description="Araç modeli"),
+    model_yil: int = Query(2024, description="Model yılı"),
+    garaj: str = Query("İKİTELLİ GARAJI", description="Garaj adı"),
+    kapi_baslangic: int = Query(3151, description="Kapı no başlangıç"),
+    kapi_bitis: int = Query(3281, description="Kapı no bitiş"),
+    kapi_prefix: str = Query("A", description="Kapı no prefix"),
+):
+    """Generate a random fleet of vehicles."""
+    vehicles = _generate_fleet(
+        model=model,
+        model_year=model_yil,
+        garage=garaj,
+        kapi_start=kapi_baslangic,
+        kapi_end=kapi_bitis,
+        kapi_prefix=kapi_prefix,
+    )
+    return JSONResponse({
+        "model": model,
+        "modelYil": model_yil,
+        "garaj": garaj,
+        "toplam": len(vehicles),
+        "araclar": vehicles,
+    })
 
 
 @app.get("/api/arsiv/arac")
