@@ -443,6 +443,69 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 }
 .adv-field input:focus { border-color: var(--primary); }
 
+/* Fleet generator */
+.fleet-controls {
+  padding: 10px 16px;
+  background: #f0fff4;
+  border-bottom: 1px solid var(--border);
+}
+.fleet-vehicle-item {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.fleet-vehicle-item:hover { background: var(--bg); }
+.fleet-vehicle-item .fv-kapi {
+  font-weight: 700;
+  color: var(--primary);
+  min-width: 50px;
+}
+.fleet-vehicle-item .fv-plate {
+  font-weight: 600;
+  min-width: 100px;
+}
+.fleet-vehicle-item .fv-status {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+.fleet-vehicle-item .fv-status.seferde {
+  background: #e6f4ea;
+  color: var(--success);
+}
+.fleet-vehicle-item .fv-status.garajda {
+  background: #fef7e0;
+  color: #f57f17;
+}
+.fleet-stats {
+  padding: 12px 16px;
+  background: #e8f5e9;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.fleet-stat {
+  text-align: center;
+  flex: 1;
+  min-width: 70px;
+}
+.fleet-stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--success);
+}
+.fleet-stat-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
 /* Archive controls */
 .archive-controls {
   padding: 10px 16px;
@@ -572,6 +635,9 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
       <div class="tab" data-tab="archive" onclick="switchTab('archive')">
         <i class="fas fa-history"></i> Geçmiş
       </div>
+      <div class="tab" data-tab="fleet" onclick="switchTab('fleet')">
+        <i class="fas fa-truck-loading"></i> Filo
+      </div>
     </div>
 
     <div class="sidebar-content">
@@ -610,6 +676,55 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
           <div class="spinner"></div> Duyurular yükleniyor...
         </div>
         <div id="announcements-list"></div>
+      </div>
+
+      <!-- Filo Jeneratör panel -->
+      <div id="panel-fleet" class="panel">
+        <div class="fleet-controls">
+          <div class="adv-search-title"><i class="fas fa-robot"></i> Filo Jeneratör (AI)</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px">
+            Rastgele araç filosu oluşturun. Kapı numaraları ve plakalar otomatik üretilir.
+          </div>
+          <div class="adv-row">
+            <div class="adv-field">
+              <label>Model</label>
+              <input type="text" id="fleetModel" value="AKİA ULTRA LF 12" placeholder="AKİA ULTRA LF 12" />
+            </div>
+            <div class="adv-field">
+              <label>Model Yılı</label>
+              <input type="number" id="fleetYear" value="2024" placeholder="2024" />
+            </div>
+          </div>
+          <div class="adv-row">
+            <div class="adv-field">
+              <label>Garaj</label>
+              <input type="text" id="fleetGaraj" value="İKİTELLİ GARAJI" placeholder="İKİTELLİ GARAJI" />
+            </div>
+          </div>
+          <div class="adv-row">
+            <div class="adv-field">
+              <label>Kapı No Başlangıç</label>
+              <input type="number" id="fleetKapiStart" value="3130" placeholder="3130" />
+            </div>
+            <div class="adv-field">
+              <label>Kapı No Bitiş</label>
+              <input type="number" id="fleetKapiEnd" value="3280" placeholder="3280" />
+            </div>
+            <div class="adv-field">
+              <label>Prefix</label>
+              <input type="text" id="fleetPrefix" value="A" placeholder="A" />
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="generateFleet()" style="width:100%;margin-top:6px;background:#34a853;border-color:#34a853">
+            <i class="fas fa-magic"></i> Filo Oluştur (130 Araç)
+          </button>
+        </div>
+        <div class="loading" id="fleet-loading" style="display:none">
+          <div class="spinner"></div> Filo oluşturuluyor...
+        </div>
+        <div id="fleet-stats-bar" style="display:none"></div>
+        <div id="fleet-info" style="padding:8px 16px;font-size:12px;color:var(--text-secondary);display:none"></div>
+        <div id="fleet-list"></div>
       </div>
 
       <!-- Geçmiş Konum panel -->
@@ -1156,6 +1271,7 @@ function switchTab(name) {
 
   if (name === 'announcements') loadAnnouncements();
   if (name !== 'archive' && typeof clearArchiveMarkers === 'function') clearArchiveMarkers();
+  if (name !== 'fleet' && typeof clearFleetMarkers === 'function') clearFleetMarkers();
 }
 
 function filterStops(dir) {
@@ -1512,6 +1628,148 @@ function toggleArchivePlay() {
 
 // Archive default: 28.04.2026 for A-244 on 86V
 // (already set in HTML value attributes)
+
+// ===== Fleet Generator =====
+let fleetMarkers = [];
+let fleetData = [];
+
+function clearFleetMarkers() {
+  fleetMarkers.forEach(m => m.remove());
+  fleetMarkers = [];
+}
+
+function fleetBusIcon(status) {
+  const color = status === 'Seferde' ? '#34a853' : '#f57f17';
+  return L.divIcon({
+    className: 'bus-marker',
+    html: `<div style="
+      background:${color};
+      width:28px;height:28px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      color:white;font-size:13px;
+      border:2px solid white;
+      box-shadow:0 2px 6px rgba(0,0,0,0.3);
+    "><i class='fas fa-bus'></i></div>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -14]
+  });
+}
+
+async function generateFleet() {
+  const model = document.getElementById('fleetModel').value.trim();
+  const modelYil = document.getElementById('fleetYear').value;
+  const garaj = document.getElementById('fleetGaraj').value.trim();
+  const kapiStart = document.getElementById('fleetKapiStart').value;
+  const kapiEnd = document.getElementById('fleetKapiEnd').value;
+  const prefix = document.getElementById('fleetPrefix').value.trim();
+
+  showLoading('fleet');
+  document.getElementById('fleet-info').style.display = 'none';
+  document.getElementById('fleet-stats-bar').style.display = 'none';
+  document.getElementById('fleet-list').innerHTML = '';
+
+  try {
+    const url = `/api/filo/generate?model=${encodeURIComponent(model)}&model_yil=${modelYil}&garaj=${encodeURIComponent(garaj)}&kapi_baslangic=${kapiStart}&kapi_bitis=${kapiEnd}&kapi_prefix=${encodeURIComponent(prefix)}`;
+    const data = await api(url);
+    fleetData = data.araclar || [];
+
+    const seferde = fleetData.filter(v => v.durum === 'Seferde').length;
+    const garajda = fleetData.filter(v => v.durum === 'Garajda').length;
+
+    // Stats bar
+    const statsBar = document.getElementById('fleet-stats-bar');
+    statsBar.style.display = 'flex';
+    statsBar.className = 'fleet-stats';
+    statsBar.innerHTML = `
+      <div class="fleet-stat">
+        <div class="fleet-stat-value">${data.toplam}</div>
+        <div class="fleet-stat-label">Toplam Araç</div>
+      </div>
+      <div class="fleet-stat">
+        <div class="fleet-stat-value" style="color:var(--success)">${seferde}</div>
+        <div class="fleet-stat-label">Seferde</div>
+      </div>
+      <div class="fleet-stat">
+        <div class="fleet-stat-value" style="color:#f57f17">${garajda}</div>
+        <div class="fleet-stat-label">Garajda</div>
+      </div>
+      <div class="fleet-stat">
+        <div class="fleet-stat-value" style="color:var(--primary)">${data.modelYil}</div>
+        <div class="fleet-stat-label">Model Yılı</div>
+      </div>
+    `;
+
+    // Info
+    const info = document.getElementById('fleet-info');
+    info.style.display = 'block';
+    info.innerHTML = `<b>${escHtml(data.model)}</b> · ${escHtml(data.garaj)} · ${data.toplam} araç üretildi`;
+
+    // Plot on map
+    plotFleet(fleetData);
+
+    // List
+    displayFleetList(fleetData);
+  } catch (e) {
+    console.error(e);
+    document.getElementById('fleet-info').style.display = 'block';
+    document.getElementById('fleet-info').textContent = 'Filo oluşturulurken hata oluştu.';
+  }
+  hideLoading('fleet');
+}
+
+function plotFleet(vehicles) {
+  clearFleetMarkers();
+  const bounds = [];
+
+  vehicles.forEach(v => {
+    const lat = parseFloat(v.enlem);
+    const lng = parseFloat(v.boylam);
+    if (isNaN(lat) || isNaN(lng)) return;
+
+    const marker = L.marker([lat, lng], { icon: fleetBusIcon(v.durum) })
+      .bindPopup(`
+        <div class="popup-title"><i class="fas fa-bus"></i> ${escHtml(v.kapiNo)}</div>
+        <div class="popup-detail">
+          <b>Plaka:</b> ${escHtml(v.plaka)}<br>
+          <b>Model:</b> ${escHtml(v.model)} (${v.modelYil})<br>
+          <b>Garaj:</b> ${escHtml(v.garaj)}<br>
+          <b>Yön:</b> ${v.yon}<br>
+          <b>Durum:</b> ${v.durum}<br>
+          <b>Hız:</b> ${v.hiz} km/s
+        </div>
+      `)
+      .addTo(map);
+
+    fleetMarkers.push(marker);
+    bounds.push([lat, lng]);
+  });
+
+  if (bounds.length > 0) {
+    map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
+  }
+}
+
+function displayFleetList(vehicles) {
+  const list = document.getElementById('fleet-list');
+  list.innerHTML = vehicles.map(v => `
+    <div class="fleet-vehicle-item" onclick="focusFleetVehicle(${v.enlem},${v.boylam},'${escHtml(v.kapiNo)}')">
+      <span class="fv-kapi">${escHtml(v.kapiNo)}</span>
+      <span class="fv-plate">${escHtml(v.plaka)}</span>
+      <span style="flex:1;color:var(--text-secondary);font-size:11px">${v.yon}</span>
+      <span class="fv-status ${v.durum === 'Seferde' ? 'seferde' : 'garajda'}">${v.durum}</span>
+    </div>
+  `).join('');
+}
+
+function focusFleetVehicle(lat, lng, kapiNo) {
+  map.setView([lat, lng], 16);
+  fleetMarkers.forEach(m => {
+    if (m.getPopup && m.getPopup() && m.getPopup().getContent().includes(kapiNo)) {
+      m.openPopup();
+    }
+  });
+}
 </script>
 </body>
 </html>
