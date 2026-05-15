@@ -544,11 +544,11 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
         </div>
         <div class="adv-field">
           <label>Kapı No</label>
-          <input type="text" id="advKapi" value="A-244" placeholder="A-244" />
+          <input type="text" id="advKapi" value="" placeholder="Kapı No (opsiyonel)" />
         </div>
         <div class="adv-field">
           <label>Tarih</label>
-          <input type="text" id="advTarih" value="28.04.2026" placeholder="28.04.2026" />
+          <input type="text" id="advTarih" value="28.04.2026 20:00" placeholder="28.04.2026 20:00" />
         </div>
       </div>
       <button class="btn btn-primary" onclick="advancedSearch()" style="width:100%">
@@ -570,7 +570,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
         <i class="fas fa-bullhorn"></i> Duyurular
       </div>
       <div class="tab" data-tab="archive" onclick="switchTab('archive')">
-        <i class="fas fa-archive"></i> Arşiv
+        <i class="fas fa-history"></i> Geçmiş
       </div>
     </div>
 
@@ -612,32 +612,35 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
         <div id="announcements-list"></div>
       </div>
 
-      <!-- Archive panel -->
+      <!-- Geçmiş Konum panel -->
       <div id="panel-archive" class="panel">
         <div class="archive-controls">
-          <div class="adv-search-title"><i class="fas fa-archive"></i> Araç Konum Arşivi</div>
+          <div class="adv-search-title"><i class="fas fa-history"></i> Geçmiş Araç Konumu</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px">
+            Belirli bir aracın geçmiş tarihli konumlarını harita üzerinde görüntüleyin.
+          </div>
           <div class="adv-row">
             <div class="adv-field">
               <label>Hat No</label>
               <input type="text" id="archiveHat" value="86V" placeholder="86V" />
             </div>
             <div class="adv-field">
-              <label>Tarih (YYYY-MM-DD)</label>
-              <input type="date" id="archiveTarih" />
+              <label>Tarih</label>
+              <input type="text" id="archiveTarih" value="28.04.2026" placeholder="GG.AA.YYYY" />
             </div>
           </div>
           <div class="adv-row">
             <div class="adv-field">
-              <label>Kapı No (opsiyonel)</label>
-              <input type="text" id="archiveKapi" placeholder="A-244" />
+              <label>Kapı No</label>
+              <input type="text" id="archiveKapi" value="A-244" placeholder="A-244" />
             </div>
           </div>
           <button class="btn btn-primary" onclick="loadArchive()" style="width:100%;margin-top:6px">
-            <i class="fas fa-search"></i> Arşiv Ara
+            <i class="fas fa-search"></i> Geçmiş Konum Ara
           </button>
         </div>
         <div class="loading" id="archive-loading" style="display:none">
-          <div class="spinner"></div> Arşiv yükleniyor...
+          <div class="spinner"></div> Geçmiş konum verileri yükleniyor...
         </div>
         <div id="archive-info" style="padding:8px 16px;font-size:12px;color:var(--text-secondary);display:none"></div>
         <div id="archive-timeline" style="padding:8px 16px;display:none">
@@ -1293,14 +1296,14 @@ async function advancedSearch() {
 // ===== Init =====
 initMap();
 
-// Auto-load 86V with A-244 tracking
+// Auto-load 86V route
 (async function() {
-  trackedVehicle = 'A-244';
+  trackedVehicle = null;
   const banner = document.getElementById('trackingBanner');
   const detail = document.getElementById('trackingDetail');
   const status = document.getElementById('trackingStatus');
   banner.classList.add('visible');
-  detail.textContent = 'Hat: 86V | Kapı No: A-244 | Tarih: 28.04.2026';
+  detail.textContent = 'Hat: 86V | Tarih: 28.04.2026 20:00';
   status.textContent = 'Yükleniyor...';
 
   showLoading('routes');
@@ -1310,12 +1313,12 @@ initMap();
       displayRoutes(data);
       await selectRoute(data[0].SHATKODU, data[0].SHATADI);
 
-      const found = currentVehicles.find(v => v.kapino === 'A-244');
-      if (found) {
-        status.textContent = 'A-244 bulundu - Canlı takip aktif';
+      const count = currentVehicles.length;
+      if (count > 0) {
+        status.textContent = count + ' araç aktif - Canlı takip devam ediyor';
         status.style.background = 'rgba(76,175,80,0.3)';
       } else {
-        status.textContent = 'A-244 şu an hatta aktif değil - Otomatik takip devam ediyor';
+        status.textContent = 'Şu an hatta aktif araç yok';
         status.style.background = 'rgba(255,255,255,0.2)';
       }
     }
@@ -1328,9 +1331,21 @@ let archiveData = [];
 let archiveMarkers = [];
 let archivePlayInterval = null;
 
+function parseTurkishDate(str) {
+  if (!str) return '';
+  str = str.trim();
+  // Already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  // GG.AA.YYYY
+  const m = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+  if (m) return m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+  return str;
+}
+
 async function loadArchive() {
   const hatKodu = document.getElementById('archiveHat').value.trim().toUpperCase();
-  const tarih = document.getElementById('archiveTarih').value;
+  const tarihRaw = document.getElementById('archiveTarih').value;
+  const tarih = parseTurkishDate(tarihRaw);
   const kapiNo = document.getElementById('archiveKapi').value.trim().toUpperCase();
 
   if (!hatKodu) return;
@@ -1495,8 +1510,8 @@ function toggleArchivePlay() {
   }, 1000);
 }
 
-// Set default archive date to today
-document.getElementById('archiveTarih').valueAsDate = new Date();
+// Archive default: 28.04.2026 for A-244 on 86V
+// (already set in HTML value attributes)
 </script>
 </body>
 </html>
