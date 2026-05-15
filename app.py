@@ -289,8 +289,8 @@ def _generate_fleet(
     model: str = "AKİA ULTRA LF 12",
     model_year: int = 2024,
     garage: str = "İKİTELLİ GARAJI",
-    kapi_start: int = 3130,
-    kapi_end: int = 3280,
+    kapi_start: int = 3151,
+    kapi_end: int = 3281,
     kapi_prefix: str = "A",
 ) -> list[dict]:
     """Generate a fleet of vehicles with random plates and positions."""
@@ -342,8 +342,8 @@ async def generate_fleet(
     model: str = Query("AKİA ULTRA LF 12", description="Araç modeli"),
     model_yil: int = Query(2024, description="Model yılı"),
     garaj: str = Query("İKİTELLİ GARAJI", description="Garaj adı"),
-    kapi_baslangic: int = Query(3130, description="Kapı no başlangıç"),
-    kapi_bitis: int = Query(3280, description="Kapı no bitiş"),
+    kapi_baslangic: int = Query(3151, description="Kapı no başlangıç"),
+    kapi_bitis: int = Query(3281, description="Kapı no bitiş"),
     kapi_prefix: str = Query("A", description="Kapı no prefix"),
 ):
     """Generate a random fleet of vehicles."""
