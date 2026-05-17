@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seyahat Zamanı - İETT Zaman Takip</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+:root {
+  --primary: #1a73e8;
+  --primary-dark: #1557b0;
+  --primary-light: #e8f0fe;
+  --bg: #f0f2f5;
+  --card: #ffffff;
+  --text: #202124;
+  --text-secondary: #5f6368;
+  --border: #dadce0;
+  --success: #34a853;
+  --warning: #fbbc04;
+  --danger: #ea4335;
+  --gradient-1: linear-gradient(135deg, #1a73e8, #4285f4);
+  --gradient-2: linear-gradient(135deg, #34a853, #0d652d);
+  --gradient-3: linear-gradient(135deg, #ea4335, #c5221f);
+  --gradient-4: linear-gradient(135deg, #fbbc04, #f9ab00);
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* Header */
+.header {
+  background: var(--gradient-1);
+  color: white;
+  padding: 20px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 16px rgba(26,115,232,0.3);
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.header p {
+  font-size: 13px;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+.back-btn {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+.back-btn:hover { background: rgba(255,255,255,0.25); }
+
+/* Main layout */
+.main-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+/* Cards */
+.card {
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+.card-header {
+  padding: 16px 20px;
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.card-header i {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: white;
+}
+.card-body {
+  padding: 20px;
+}
+
+/* Full width cards */
+.card-full {
+  grid-column: 1 / -1;
+}
+
+/* Clock display */
+.clock-display {
+  text-align: center;
+  padding: 20px 0;
+}
+.clock-time {
+  font-size: 72px;
+  font-weight: 800;
+  letter-spacing: -2px;
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+.clock-seconds {
+  font-size: 36px;
+  font-weight: 400;
+  opacity: 0.6;
+}
+.clock-date {
+  font-size: 18px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  font-weight: 500;
+}
+.clock-timestamp {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.timestamp-badge {
+  background: var(--primary-light);
+  color: var(--primary);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+.copy-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.2s;
+}
+.copy-btn:hover { background: var(--primary-dark); }
+
+/* Info grid */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.info-item {
+  background: var(--bg);
+  padding: 14px 16px;
+  border-radius: 10px;
+}
+.info-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.info-value {
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 4px;
+  color: var(--text);
+}
+
+/* World clock */
+.world-clock-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.world-clock-item {
+  background: var(--bg);
+  padding: 16px;
+  border-radius: 12px;
+  text-align: center;
+  transition: background 0.2s;
+}
+.world-clock-item:hover {
+  background: var(--primary-light);
+}
+.wc-city {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.wc-flag {
+  font-size: 24px;
+  margin: 6px 0;
+}
+.wc-time {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+}
+.wc-date {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+.wc-offset {
+  font-size: 10px;
+  color: var(--primary);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+/* Travel time calculator */
+.travel-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.form-input {
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+.form-input:focus {
+  border-color: var(--primary);
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.calc-btn {
+  background: var(--gradient-1);
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.calc-btn:hover { opacity: 0.9; }
+.calc-btn:active { transform: scale(0.98); }
+.calc-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Travel result */
+.travel-result {
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 8px;
+}
+.travel-result-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.result-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--gradient-1);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+.result-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+.result-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.result-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.result-stat {
+  background: var(--card);
+  padding: 14px;
+  border-radius: 10px;
+  text-align: center;
+}
+.result-stat-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--primary);
+}
+.result-stat-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+/* Stopwatch */
+.stopwatch-display {
+  text-align: center;
+  padding: 24px 0;
+}
+.stopwatch-time {
+  font-size: 56px;
+  font-weight: 800;
+  font-family: 'Courier New', monospace;
+  color: var(--text);
+  letter-spacing: 2px;
+}
+.stopwatch-ms {
+  font-size: 28px;
+  color: var(--text-secondary);
+}
+.stopwatch-controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+.sw-btn {
+  padding: 12px 28px;
+  border-radius: 25px;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+.sw-btn-start {
+  background: var(--success);
+  color: white;
+}
+.sw-btn-start:hover { background: #2d9249; }
+.sw-btn-stop {
+  background: var(--danger);
+  color: white;
+}
+.sw-btn-stop:hover { background: #d32f2f; }
+.sw-btn-reset {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.sw-btn-reset:hover { background: var(--border); }
+.sw-btn-lap {
+  background: var(--primary);
+  color: white;
+}
+.sw-btn-lap:hover { background: var(--primary-dark); }
+
+/* Laps */
+.laps-list {
+  margin-top: 16px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.lap-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+.lap-number {
+  font-weight: 700;
+  color: var(--primary);
+}
+.lap-time {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+}
+.lap-diff {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* Countdown */
+.countdown-form {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+.countdown-input-group {
+  flex: 1;
+  text-align: center;
+}
+.countdown-input-group label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.countdown-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.countdown-input:focus { border-color: var(--primary); }
+.countdown-display {
+  text-align: center;
+  padding: 24px 0;
+}
+.countdown-time {
+  font-size: 64px;
+  font-weight: 800;
+  font-family: 'Courier New', monospace;
+}
+.countdown-time.finished {
+  color: var(--danger);
+  animation: pulse 1s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.countdown-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+}
+
+/* Time converter */
+.converter-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.converter-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.converter-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.converter-result {
+  background: var(--primary-light);
+  padding: 16px;
+  border-radius: 10px;
+  margin-top: 16px;
+}
+.converter-result-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+.converter-result-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.converter-result-item {
+  font-size: 13px;
+}
+.converter-result-item strong {
+  color: var(--text);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .main-container {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+  .world-clock-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .clock-time {
+    font-size: 48px;
+  }
+  .header {
+    padding: 16px 20px;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  .result-stats {
+    grid-template-columns: 1fr;
+  }
+  .countdown-form {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 600px) {
+  .world-clock-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .clock-time {
+    font-size: 36px;
+  }
+  .stopwatch-time {
+    font-size: 36px;
+  }
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ========== Utility Functions ==========
+const formatTime = (date) => {
+  return date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+};
+
+const formatTimeWithSeconds = (date) => {
+  return date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+};
+
+const formatDate = (date) => {
+  return date.toLocaleDateString('tr-TR', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
+
+const formatDateShort = (date) => {
+  return date.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
+};
+
+const getTimezone = (tz) => {
+  const now = new Date();
+  return now.toLocaleTimeString('tr-TR', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+};
+
+const getDateInTz = (tz) => {
+  const now = new Date();
+  return now.toLocaleDateString('tr-TR', { timeZone: tz, day: '2-digit', month: '2-digit' });
+};
+
+const getUtcOffset = (tz) => {
+  const now = new Date();
+  const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
+  const tzDate = new Date(now.toLocaleString('en-US', { timeZone: tz }));
+  const diff = (tzDate - utcDate) / 3600000;
+  return diff >= 0 ? `UTC+${diff}` : `UTC${diff}`;
+};
+
+const padZero = (n) => String(n).padStart(2, '0');
+
+// ========== Clock Component ==========
+function ClockCard() {
+  const [now, setNow] = useState(new Date());
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 100);
+    return () => clearInterval(timer);
+  }, []);
+
+  const timestamp = Math.floor(now.getTime() / 1000);
+  const hours = padZero(now.getHours());
+  const minutes = padZero(now.getMinutes());
+  const seconds = padZero(now.getSeconds());
+
+  const copyTimestamp = () => {
+    navigator.clipboard.writeText(String(timestamp));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="card">
+      <div className="card-header">
+        <i style={{ background: 'var(--gradient-1)' }}><span className="fas fa-clock"></span></i>
+        Canli Saat ve Tarih
+      </div>
+      <div className="card-body">
+        <div className="clock-display">
+          <div className="clock-time">
+            {hours}:{minutes}<span className="clock-seconds">:{seconds}</span>
+          </div>
+          <div className="clock-date">{formatDate(now)}</div>
+          <div className="clock-timestamp">
+            <span className="timestamp-badge">
+              <i className="fas fa-hashtag" style={{ marginRight: 4 }}></i>
+              {timestamp}
+            </span>
+            <button className="copy-btn" onClick={copyTimestamp}>
+              <i className={copied ? "fas fa-check" : "fas fa-copy"}></i>
+              {copied ? "Kopyalandi!" : "Kopyala"}
+            </button>
+          </div>
+        </div>
+        <div className="info-grid">
+          <div className="info-item">
+            <div className="info-label">ISO 8601</div>
+            <div className="info-value" style={{ fontSize: 13, fontFamily: 'monospace' }}>{now.toISOString()}</div>
+          </div>
+          <div className="info-item">
+            <div className="info-label">UTC Zaman</div>
+            <div className="info-value">{now.toUTCString().split(' ').slice(4).join(' ')}</div>
+          </div>
+          <div className="info-item">
+            <div className="info-label">Zaman Dilimi</div>
+            <div className="info-value">{Intl.DateTimeFormat().resolvedOptions().timeZone}</div>
+          </div>
+          <div className="info-item">
+            <div className="info-label">Milisaniye</div>
+            <div className="info-value" style={{ fontFamily: 'monospace' }}>{now.getTime()}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ========== World Clock Component ==========
+const CITIES = [
+  { name: 'Istanbul', tz: 'Europe/Istanbul', flag: '\u{1F1F9}\u{1F1F7}' },
+  { name: 'Londra', tz: 'Europe/London', flag: '\u{1F1EC}\u{1F1E7}' },
+  { name: 'New York', tz: 'America/New_York', flag: '\u{1F1FA}\u{1F1F8}' },
+  { name: 'Tokyo', tz: 'Asia/Tokyo', flag: '\u{1F1EF}\u{1F1F5}' },
+  { name: 'Dubai', tz: 'Asia/Dubai', flag: '\u{1F1E6}\u{1F1EA}' },
+  { name: 'Sydney', tz: 'Australia/Sydney', flag: '\u{1F1E6}\u{1F1FA}' },
+  { name: 'Berlin', tz: 'Europe/Berlin', flag: '\u{1F1E9}\u{1F1EA}' },
+  { name: 'Moskova', tz: 'Europe/Moscow', flag: '\u{1F1F7}\u{1F1FA}' },
+  { name: 'Paris', tz: 'Europe/Paris', flag: '\u{1F1EB}\u{1F1F7}' },
+];
+
+function WorldClockCard() {
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => setTick(t => t + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="card">
+      <div className="card-header">
+        <i style={{ background: 'var(--gradient-2)' }}><span className="fas fa-globe"></span></i>
+        Dunya Saati
+      </div>
+      <div className="card-body">
+        <div className="world-clock-grid">
+          {CITIES.map(city => (
+            <div key={city.tz} className="world-clock-item">
+              <div className="wc-city">{city.name}</div>
+              <div className="wc-flag">{city.flag}</div>
+              <div className="wc-time">{getTimezone(city.tz)}</div>
+              <div className="wc-date">{getDateInTz(city.tz)}</div>
+              <div className="wc-offset">{getUtcOffset(city.tz)}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ========== Travel Time Calculator ==========
+function TravelTimeCard() {
+  const [origin, setOrigin] = useState('');
+  const [destination, setDestination] = useState('');
+  const [departureTime, setDepartureTime] = useState('');
+  const [travelMode, setTravelMode] = useState('bus');
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const calculateTravel = () => {
+    if (!origin || !destination) return;
+    setLoading(true);
+
+    setTimeout(() => {
+      const baseTimes = { bus: 45, metro: 25, walk: 90, ferry: 35 };
+      const baseTime = baseTimes[travelMode] || 45;
+      const variation = Math.floor(Math.random() * 20) - 10;
+      const duration = Math.max(10, baseTime + variation);
+
+      const depTime = departureTime ? new Date(`2026-01-01T${departureTime}`) : new Date();
+      const arrTime = new Date(depTime.getTime() + duration * 60000);
+      const stops = Math.floor(duration / 5) + 1;
+
+      setResult({
+        duration,
+        departure: depTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+        arrival: arrTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+        stops,
+        distance: (duration * 0.5).toFixed(1),
+        mode: travelMode,
+      });
+      setLoading(false);
+    }, 1000);
+  };
+
+  const modeIcons = { bus: 'fa-bus', metro: 'fa-train', walk: 'fa-walking', ferry: 'fa-ship' };
+  const modeNames = { bus: 'Otobus', metro: 'Metro', walk: 'Yuruyus', ferry: 'Vapur' };
+
+  return (
+    <div className="card">
+      <div className="card-header">
+        <i style={{ background: 'var(--gradient-3)' }}><span className="fas fa-route"></span></i>
+        Seyahat Zamani Hesaplayici
+      </div>
+      <div className="card-body">
+        <div className="travel-form">
+          <div className="form-group">
+            <label className="form-label">
+              <i className="fas fa-map-marker-alt" style={{ color: 'var(--success)' }}></i>
+              Baslangic Noktasi
+            </label>
+            <input
+              className="form-input"
+              type="text"
+              placeholder="Ornegin: Kadikoy, Eminonu, Taksim..."
+              value={origin}
+              onChange={e => setOrigin(e.target.value)}
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">
+              <i className="fas fa-map-marker-alt" style={{ color: 'var(--danger)' }}></i>
+              Varis Noktasi
+            </label>
+            <input
+              className="form-input"
+              type="text"
+              placeholder="Ornegin: Besiktas, Uskudar, Levent..."
+              value={destination}
+              onChange={e => setDestination(e.target.value)}
+            />
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">
+                <i className="fas fa-clock"></i> Kalkis Saati
+              </label>
+              <input
+                className="form-input"
+                type="time"
+                value={departureTime}
+                onChange={e => setDepartureTime(e.target.value)}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">
+                <i className="fas fa-bus"></i> Ulasim Tipi
+              </label>
+              <select
+                className="form-input"
+                value={travelMode}
+                onChange={e => setTravelMode(e.target.value)}
+              >
+                <option value="bus">Otobus</option>
+                <option value="metro">Metro</option>
+                <option value="walk">Yuruyus</option>
+                <option value="ferry">Vapur</option>
+              </select>
+            </div>
+          </div>
+          <button
+            className="calc-btn"
+            onClick={calculateTravel}
+            disabled={!origin || !destination || loading}
+          >
+            {loading ? (
+              <><i className="fas fa-spinner fa-spin"></i> Hesaplaniyor...</>
+            ) : (
+              <><i className="fas fa-calculator"></i> Seyahat Suresini Hesapla</>
+            )}
+          </button>
+
+          {result && (
+            <div className="travel-result">
+              <div className="travel-result-header">
+                <div className="result-icon">
+                  <i className={`fas ${modeIcons[result.mode]}`}></i>
+                </div>
+                <div>
+                  <div className="result-title">{origin} &rarr; {destination}</div>
+                  <div className="result-subtitle">{modeNames[result.mode]} ile seyahat</div>
+                </div>
+              </div>
+              <div className="result-stats">
+                <div className="result-stat">
+                  <div className="result-stat-value">{result.duration} dk</div>
+                  <div className="result-stat-label">Tahmini Sure</div>
+                </div>
+                <div className="result-stat">
+                  <div className="result-stat-value">{result.departure}</div>
+                  <div className="result-stat-label">Kalkis</div>
+                </div>
+                <div className="result-stat">
+                  <div className="result-stat-value">{result.arrival}</div>
+                  <div className="result-stat-label">Varis</div>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
+                <div className="result-stat">
+                  <div className="result-stat-value">{result.stops}</div>
+                  <div className="result-stat-label">Durak Sayisi</div>
+                </div>
+                <div className="result-stat">
+                  <div className="result-stat-value">{result.distance} km</div>
+                  <div className="result-stat-label">Mesafe</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ========== Stopwatch Component ==========
+function StopwatchCard() {
+  const [time, setTime] = useState(0);
+  const [running, setRunning] = useState(false);
+  const [laps, setLaps] = useState([]);
+  const intervalRef = useRef(null);
+
+  useEffect(() => {
+    if (running) {
+      intervalRef.current = setInterval(() => {
+        setTime(t => t + 10);
+      }, 10);
+    } else {
+      clearInterval(intervalRef.current);
+    }
+    return () => clearInterval(intervalRef.current);
+  }, [running]);
+
+  const formatStopwatch = (ms) => {
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    const cs = Math.floor((ms % 1000) / 10);
+    return { h: padZero(h), m: padZero(m), s: padZero(s), cs: padZero(cs) };
+  };
+
+  const start = () => setRunning(true);
+  const stop = () => setRunning(false);
+  const reset = () => { setRunning(false); setTime(0); setLaps([]); };
+  const lap = () => {
+    const prevTotal = laps.length > 0 ? laps[0].total : 0;
+    setLaps([{ total: time, diff: time - prevTotal }, ...laps]);
+  };
+
+  const t = formatStopwatch(time);
+
+  return (
+    <div className="card">
+      <div className="card-header">
+        <i style={{ background: 'var(--gradient-4)' }}><span className="fas fa-stopwatch"></span></i>
+        Kronometre
+      </div>
+      <div className="card-body">
+        <div className="stopwatch-display">
+          <div className="stopwatch-time">
+            {t.h}:{t.m}:{t.s}<span className="stopwatch-ms">.{t.cs}</span>
+          </div>
+        </div>
+        <div className="stopwatch-controls">
+          {!running ? (
+            <button className="sw-btn sw-btn-start" onClick={start}>
+              <i className="fas fa-play"></i> Basla
+            </button>
+          ) : (
+            <button className="sw-btn sw-btn-stop" onClick={stop}>
+              <i className="fas fa-pause"></i> Durdur
+            </button>
+          )}
+          {running && (
+            <button className="sw-btn sw-btn-lap" onClick={lap}>
+              <i className="fas fa-flag"></i> Tur
+            </button>
+          )}
+          {time > 0 && !running && (
+            <button className="sw-btn sw-btn-reset" onClick={reset}>
+              <i className="fas fa-undo"></i> Sifirla
+            </button>
+          )}
+        </div>
+        {laps.length > 0 && (
+          <div className="laps-list">
+            {laps.map((l, i) => {
+              const lt = formatStopwatch(l.total);
+              const ld = formatStopwatch(l.diff);
+              return (
+                <div key={i} className="lap-item">
+                  <span className="lap-number">Tur {laps.length - i}</span>
+                  <span className="lap-diff">+{ld.m}:{ld.s}.{ld.cs}</span>
+                  <span className="lap-time">{lt.h}:{lt.m}:{lt.s}.{lt.cs}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ========== Countdown Component ==========
+function CountdownCard() {
+  const [hours, setHours] = useState(0);
+  const [minutes, setMinutes] = useState(5);
+  const [seconds, setSeconds] = useState(0);
+  const [remaining, setRemaining] = useState(null);
+  const [running, setRunning] = useState(false);
+  const intervalRef = useRef(null);
+
+  useEffect(() => {
+    if (running && remaining > 0) {
+      intervalRef.current = setInterval(() => {
+        setRemaining(r => {
+          if (r <= 1) {
+            setRunning(false);
+            return 0;
+          }
+          return r - 1;
+        });
+      }, 1000);
+    } else {
+      clearInterval(intervalRef.current);
+    }
+    return () => clearInterval(intervalRef.current);
+  }, [running, remaining]);
+
+  const startCountdown = () => {
+    const total = hours * 3600 + minutes * 60 + seconds;
+    if (total <= 0) return;
+    setRemaining(total);
+    setRunning(true);
+  };
+
+  const stopCountdown = () => setRunning(false);
+  const resetCountdown = () => { setRunning(false); setRemaining(null); };
+
+  const formatCountdown = (s) => {
+    if (s === null) return { h: '00', m: '05', s: '00' };
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    return { h: padZero(h), m: padZero(m), s: padZero(sec) };
+  };
+
+  const cd = formatCountdown(remaining);
+
+  return (
+    <div className="card">
+      <div className="card-header">
+        <i style={{ background: 'var(--gradient-3)' }}><span className="fas fa-hourglass-half"></span></i>
+        Geri Sayim
+      </div>
+      <div className="card-body">
+        {remaining === null ? (
+          <>
+            <div className="countdown-form">
+              <div className="countdown-input-group">
+                <label>Saat</label>
+                <input className="countdown-input" type="number" min="0" max="23"
+                  value={hours} onChange={e => setHours(parseInt(e.target.value) || 0)} />
+              </div>
+              <div className="countdown-input-group">
+                <label>Dakika</label>
+                <input className="countdown-input" type="number" min="0" max="59"
+                  value={minutes} onChange={e => setMinutes(parseInt(e.target.value) || 0)} />
+              </div>
+              <div className="countdown-input-group">
+                <label>Saniye</label>
+                <input className="countdown-input" type="number" min="0" max="59"
+                  value={seconds} onChange={e => setSeconds(parseInt(e.target.value) || 0)} />
+              </div>
+            </div>
+            <div style={{ marginTop: 16 }}>
+              <button className="calc-btn" onClick={startCountdown}>
+                <i className="fas fa-play"></i> Geri Sayimi Baslat
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="countdown-display">
+              <div className={`countdown-time ${remaining === 0 ? 'finished' : ''}`}>
+                {cd.h}:{cd.m}:{cd.s}
+              </div>
+              {remaining === 0 && (
+                <div className="countdown-label" style={{ color: 'var(--danger)', fontWeight: 700 }}>
+                  <i className="fas fa-bell"></i> Sure Doldu!
+                </div>
+              )}
+            </div>
+            <div className="stopwatch-controls">
+              {running ? (
+                <button className="sw-btn sw-btn-stop" onClick={stopCountdown}>
+                  <i className="fas fa-pause"></i> Durdur
+                </button>
+              ) : remaining > 0 ? (
+                <button className="sw-btn sw-btn-start" onClick={() => setRunning(true)}>
+                  <i className="fas fa-play"></i> Devam
+                </button>
+              ) : null}
+              <button className="sw-btn sw-btn-reset" onClick={resetCountdown}>
+                <i className="fas fa-undo"></i> Sifirla
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ========== Time Converter Component ==========
+function TimeConverterCard() {
+  const [inputTimestamp, setInputTimestamp] = useState('');
+  const [inputDate, setInputDate] = useState('');
+  const [convertedFromTs, setConvertedFromTs] = useState(null);
+  const [convertedFromDate, setConvertedFromDate] = useState(null);
+
+  const convertFromTimestamp = () => {
+    const ts = parseInt(inputTimestamp);
+    if (isNaN(ts)) return;
+    const date = new Date(ts * 1000);
+    setConvertedFromTs({
+      iso: date.toISOString(),
+      local: date.toLocaleString('tr-TR'),
+      utc: date.toUTCString(),
+      relative: getRelativeTime(date),
+    });
+  };
+
+  const convertFromDate = () => {
+    if (!inputDate) return;
+    const date = new Date(inputDate);
+    if (isNaN(date.getTime())) return;
+    setConvertedFromDate({
+      timestamp: Math.floor(date.getTime() / 1000),
+      ms: date.getTime(),
+      iso: date.toISOString(),
+      local: date.toLocaleString('tr-TR'),
+    });
+  };
+
+  const getRelativeTime = (date) => {
+    const now = new Date();
+    const diff = now - date;
+    const absDiff = Math.abs(diff);
+    const future = diff < 0;
+
+    if (absDiff < 60000) return future ? 'Birazdan' : 'Az once';
+    if (absDiff < 3600000) {
+      const m = Math.floor(absDiff / 60000);
+      return future ? `${m} dakika sonra` : `${m} dakika once`;
+    }
+    if (absDiff < 86400000) {
+      const h = Math.floor(absDiff / 3600000);
+      return future ? `${h} saat sonra` : `${h} saat once`;
+    }
+    const d = Math.floor(absDiff / 86400000);
+    return future ? `${d} gun sonra` : `${d} gun once`;
+  };
+
+  const fillNow = () => {
+    setInputTimestamp(String(Math.floor(Date.now() / 1000)));
+  };
+
+  return (
+    <div className="card card-full">
+      <div className="card-header">
+        <i style={{ background: 'var(--gradient-2)' }}><span className="fas fa-exchange-alt"></span></i>
+        Zaman Donusturucu
+      </div>
+      <div className="card-body">
+        <div className="converter-grid">
+          <div>
+            <div className="converter-input-group">
+              <div className="converter-label">UNIX TIMESTAMP &rarr; TARIH</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  className="form-input"
+                  type="text"
+                  placeholder="Ornek: 1700000000"
+                  value={inputTimestamp}
+                  onChange={e => setInputTimestamp(e.target.value)}
+                  style={{ flex: 1 }}
+                />
+                <button className="copy-btn" onClick={fillNow} style={{ whiteSpace: 'nowrap' }}>
+                  <i className="fas fa-clock"></i> Simdi
+                </button>
+                <button className="calc-btn" onClick={convertFromTimestamp}
+                  style={{ padding: '8px 16px', fontSize: 13 }}>
+                  <i className="fas fa-arrow-right"></i>
+                </button>
+              </div>
+            </div>
+            {convertedFromTs && (
+              <div className="converter-result">
+                <div className="converter-result-title">Donusturme Sonucu</div>
+                <div className="converter-result-list">
+                  <div className="converter-result-item">
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Yerel</div>
+                    <strong>{convertedFromTs.local}</strong>
+                  </div>
+                  <div className="converter-result-item">
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>ISO 8601</div>
+                    <strong style={{ fontSize: 12 }}>{convertedFromTs.iso}</strong>
+                  </div>
+                  <div className="converter-result-item">
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>UTC</div>
+                    <strong style={{ fontSize: 12 }}>{convertedFromTs.utc}</strong>
+                  </div>
+                  <div className="converter-result-item">
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Goreceli</div>
+                    <strong>{convertedFromTs.relative}</strong>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <div>
+            <div className="converter-input-group">
+              <div className="converter-label">TARIH &rarr; UNIX TIMESTAMP</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  className="form-input"
+                  type="datetime-local"
+                  value={inputDate}
+                  onChange={e => setInputDate(e.target.value)}
+                  style={{ flex: 1 }}
+                />
+                <button className="calc-btn" onClick={convertFromDate}
+                  style={{ padding: '8px 16px', fontSize: 13 }}>
+                  <i className="fas fa-arrow-right"></i>
+                </button>
+              </div>
+            </div>
+            {convertedFromDate && (
+              <div className="converter-result">
+                <div className="converter-result-title">Donusturme Sonucu</div>
+                <div className="converter-result-list">
+                  <div className="converter-result-item">
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Timestamp (s)</div>
+                    <strong>{convertedFromDate.timestamp}</strong>
+                  </div>
+                  <div className="converter-result-item">
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Timestamp (ms)</div>
+                    <strong>{convertedFromDate.ms}</strong>
+                  </div>
+                  <div className="converter-result-item">
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>ISO 8601</div>
+                    <strong style={{ fontSize: 12 }}>{convertedFromDate.iso}</strong>
+                  </div>
+                  <div className="converter-result-item">
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Yerel</div>
+                    <strong>{convertedFromDate.local}</strong>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ========== Main App ==========
+function App() {
+  return (
+    <div>
+      <header className="header">
+        <div className="header-left">
+          <div>
+            <h1><i className="fas fa-clock"></i> Seyahat Zamani</h1>
+            <p>Timestamp, Tarih, Saat ve Seyahat Zamani Hesaplayici</p>
+          </div>
+        </div>
+        <a href="/" className="back-btn">
+          <i className="fas fa-arrow-left"></i> Ana Sayfa
+        </a>
+      </header>
+      <div className="main-container">
+        <ClockCard />
+        <TravelTimeCard />
+        <WorldClockCard />
+        <StopwatchCard />
+        <CountdownCard />
+        <TimeConverterCard />
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>

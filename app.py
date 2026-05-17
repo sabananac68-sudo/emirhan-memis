@@ -100,6 +100,11 @@ async def index():
     return FileResponse(STATIC_DIR / "index.html")
 
 
+@app.get("/travel-time")
+async def travel_time_page():
+    return FileResponse(STATIC_DIR / "travel-time.html")
+
+
 @app.get("/api/hat")
 async def get_hat(kod: str = Query("", description="Hat kodu (boş=tümü)")):
     data = await _soap_call_json(
