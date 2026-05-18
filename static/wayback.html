@@ -1,0 +1,1615 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zaman Yolculuğu Tarayıcısı - Wayback Machine</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<style>
+:root {
+  --primary: #6c5ce7;
+  --primary-dark: #5a4bd1;
+  --primary-light: #a29bfe;
+  --bg: #0f0e17;
+  --bg-secondary: #1a1932;
+  --card: #232246;
+  --card-hover: #2d2c5e;
+  --text: #fffffe;
+  --text-secondary: #94a1b2;
+  --border: #393867;
+  --accent: #ff6b6b;
+  --accent2: #ffd93d;
+  --success: #6bff9e;
+  --gradient-1: linear-gradient(135deg, #6c5ce7, #a29bfe);
+  --gradient-2: linear-gradient(135deg, #ff6b6b, #ffd93d);
+  --glow: 0 0 20px rgba(108, 92, 231, 0.3);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Animated background */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(108, 92, 231, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 107, 107, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 50% 80%, rgba(255, 217, 61, 0.04) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Header / Navbar */
+.navbar {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.navbar-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--gradient-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: var(--glow);
+}
+
+.navbar-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.navbar-subtitle {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-link {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-link:hover { background: var(--card); color: var(--text); }
+.nav-link.active { background: var(--primary); color: white; }
+
+/* Hero Section */
+.hero {
+  text-align: center;
+  padding: 48px 24px 32px;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 24px;
+  background: var(--gradient-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  margin: 0 auto 20px;
+  box-shadow: var(--glow);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.hero h1 {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  background: var(--gradient-2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  max-width: 500px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Search Section */
+.search-section {
+  max-width: 900px;
+  margin: 0 auto 32px;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.search-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.search-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.search-field {
+  flex: 1;
+}
+
+.search-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.search-field .input-wrap {
+  display: flex;
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0 14px;
+  transition: all 0.2s;
+}
+
+.search-field .input-wrap:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
+}
+
+.search-field .input-wrap i {
+  color: var(--primary-light);
+  font-size: 16px;
+  margin-right: 10px;
+}
+
+.search-field input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 12px 0;
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  font-family: inherit;
+}
+
+.search-field input::placeholder { color: var(--text-secondary); }
+
+.search-field input[type="date"],
+.search-field input[type="time"] {
+  color-scheme: dark;
+}
+
+.date-time-row {
+  display: flex;
+  gap: 12px;
+}
+
+.date-time-row .search-field { flex: 1; }
+
+.search-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+}
+
+.btn-primary {
+  background: var(--gradient-1);
+  color: white;
+  box-shadow: var(--glow);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 30px rgba(108, 92, 231, 0.4);
+}
+
+.btn-secondary {
+  background: var(--card-hover);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover { background: var(--border); }
+
+.btn-accent {
+  background: var(--gradient-2);
+  color: #333;
+}
+
+.btn-accent:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 30px rgba(255, 107, 107, 0.3);
+}
+
+.btn-sm {
+  padding: 8px 14px;
+  font-size: 12px;
+}
+
+/* Quick Links */
+.quick-links {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.quick-link {
+  padding: 6px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.quick-link:hover {
+  border-color: var(--primary);
+  color: var(--primary-light);
+  background: rgba(108, 92, 231, 0.1);
+}
+
+/* Results / Timeline */
+.results-section {
+  max-width: 900px;
+  margin: 0 auto 32px;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.results-title {
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.results-count {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--card);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+/* Timeline */
+.timeline {
+  position: relative;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+
+.timeline-item {
+  position: relative;
+  padding-left: 52px;
+  padding-bottom: 20px;
+  cursor: pointer;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: 12px;
+  top: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--card);
+  border: 3px solid var(--primary);
+  z-index: 1;
+  transition: all 0.2s;
+}
+
+.timeline-item:hover .timeline-dot {
+  background: var(--primary);
+  box-shadow: 0 0 12px rgba(108, 92, 231, 0.5);
+}
+
+.timeline-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s;
+}
+
+.timeline-card:hover {
+  border-color: var(--primary);
+  transform: translateX(4px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+.timeline-date {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary-light);
+  margin-bottom: 4px;
+}
+
+.timeline-url {
+  font-size: 12px;
+  color: var(--text-secondary);
+  word-break: break-all;
+}
+
+.timeline-status {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+.status-200 { background: rgba(107, 255, 158, 0.15); color: var(--success); }
+.status-301, .status-302 { background: rgba(255, 217, 61, 0.15); color: var(--accent2); }
+.status-404, .status-error { background: rgba(255, 107, 107, 0.15); color: var(--accent); }
+
+/* Browser Frame */
+.browser-section {
+  max-width: 1200px;
+  margin: 0 auto 48px;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.browser-frame {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.4);
+}
+
+.browser-toolbar {
+  background: var(--bg-secondary);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.browser-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.browser-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.browser-dot.red { background: #ff5f57; }
+.browser-dot.yellow { background: #ffbd2e; }
+.browser-dot.green { background: #28ca42; }
+
+.browser-nav {
+  display: flex;
+  gap: 6px;
+}
+
+.browser-nav button {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: var(--card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.browser-nav button:hover { background: var(--card-hover); color: var(--text); }
+.browser-nav button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.browser-url-bar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 12px;
+  height: 34px;
+  overflow: hidden;
+}
+
+.browser-url-bar i { color: var(--primary-light); font-size: 12px; margin-right: 8px; }
+
+.browser-url-bar span {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.browser-url-bar .archive-badge {
+  background: var(--gradient-1);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.browser-time-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.browser-time-info i { color: var(--accent2); }
+
+.browser-content {
+  width: 100%;
+  height: 600px;
+  border: none;
+  background: white;
+}
+
+.browser-placeholder {
+  width: 100%;
+  height: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  color: var(--text-secondary);
+}
+
+.browser-placeholder i {
+  font-size: 64px;
+  color: var(--border);
+  margin-bottom: 20px;
+}
+
+.browser-placeholder h3 {
+  font-size: 18px;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.browser-placeholder p {
+  font-size: 13px;
+  max-width: 400px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* Time Slider */
+.time-slider-section {
+  max-width: 900px;
+  margin: 0 auto 32px;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+  display: none;
+}
+
+.time-slider-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.time-slider-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.time-slider-title {
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.time-slider-current {
+  font-size: 13px;
+  color: var(--primary-light);
+  font-weight: 600;
+}
+
+.time-slider-wrapper {
+  position: relative;
+  padding: 10px 0;
+}
+
+.time-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  outline: none;
+}
+
+.time-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  box-shadow: var(--glow);
+  transition: transform 0.2s;
+}
+
+.time-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.time-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+}
+
+/* Playback Controls */
+.playback-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.playback-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.playback-btn:hover { background: var(--primary); border-color: var(--primary); }
+
+.playback-btn.play-pause {
+  width: 44px;
+  height: 44px;
+  background: var(--gradient-1);
+  border: none;
+  font-size: 18px;
+}
+
+/* Stats Cards */
+.stats-section {
+  max-width: 900px;
+  margin: 0 auto 32px;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.stat-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+
+.stat-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 800;
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Calendar Heatmap */
+.calendar-section {
+  max-width: 900px;
+  margin: 0 auto 32px;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+  display: none;
+}
+
+.calendar-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.calendar-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.calendar-grid {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.calendar-cell {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--bg);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.calendar-cell:hover { transform: scale(1.5); z-index: 2; }
+.calendar-cell.level-1 { background: rgba(108, 92, 231, 0.2); }
+.calendar-cell.level-2 { background: rgba(108, 92, 231, 0.4); }
+.calendar-cell.level-3 { background: rgba(108, 92, 231, 0.6); }
+.calendar-cell.level-4 { background: var(--primary); }
+
+/* Loading */
+.loading-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(15, 14, 23, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  display: none;
+}
+
+.loading-overlay.visible { display: flex; }
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* Toast notifications */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  animation: slideIn 0.3s ease;
+  max-width: 360px;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.toast.success { border-left: 3px solid var(--success); }
+.toast.error { border-left: 3px solid var(--accent); }
+.toast.info { border-left: 3px solid var(--primary); }
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 32px 24px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  border-top: 1px solid var(--border);
+  position: relative;
+  z-index: 1;
+}
+
+.footer a {
+  color: var(--primary-light);
+  text-decoration: none;
+}
+
+.footer a:hover { text-decoration: underline; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero h1 { font-size: 24px; }
+  .search-row { flex-direction: column; }
+  .date-time-row { flex-direction: column; }
+  .browser-content, .browser-placeholder { height: 400px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .navbar { padding: 10px 16px; }
+  .navbar-links { display: none; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+/* History panel */
+.history-section {
+  max-width: 900px;
+  margin: 0 auto 32px;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+  display: none;
+}
+
+.history-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.history-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.history-item {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-radius: 8px;
+}
+
+.history-item:hover { background: var(--card-hover); }
+
+.history-item:last-child { border-bottom: none; }
+
+.history-favicon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--primary-light);
+  flex-shrink: 0;
+}
+
+.history-info { flex: 1; overflow: hidden; }
+
+.history-url {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-time {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.history-remove {
+  opacity: 0;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.history-item:hover .history-remove { opacity: 1; }
+.history-remove:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loadingText">Zaman yolculuğu başlatılıyor...</div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <a href="/" class="navbar-brand">
+    <div class="navbar-logo"><i class="fas fa-clock-rotate-left"></i></div>
+    <div>
+      <div class="navbar-title">Zaman Yolculuğu Tarayıcısı</div>
+      <div class="navbar-subtitle">Web Arşiv Gezgini</div>
+    </div>
+  </a>
+  <div class="navbar-links">
+    <a href="/" class="nav-link"><i class="fas fa-bus"></i> Ana Sayfa</a>
+    <a href="/wayback" class="nav-link active"><i class="fas fa-clock-rotate-left"></i> Wayback</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-icon"><i class="fas fa-hourglass-half"></i></div>
+  <h1>Web'de Zaman Yolculuğu</h1>
+  <p>Herhangi bir web sitesinin geçmişteki halini keşfedin. Tarihi bir tarih seçin ve internetin geçmişine yolculuk yapın.</p>
+</section>
+
+<!-- Search -->
+<section class="search-section">
+  <div class="search-card">
+    <div class="search-row">
+      <div class="search-field" style="flex: 2;">
+        <label><i class="fas fa-globe"></i> Web Sitesi Adresi</label>
+        <div class="input-wrap">
+          <i class="fas fa-link"></i>
+          <input type="text" id="urlInput" placeholder="Örnek: google.com, twitter.com, youtube.com" />
+        </div>
+      </div>
+    </div>
+    <div class="date-time-row">
+      <div class="search-field">
+        <label><i class="fas fa-calendar"></i> Tarih</label>
+        <div class="input-wrap">
+          <i class="fas fa-calendar-alt"></i>
+          <input type="date" id="dateInput" />
+        </div>
+      </div>
+      <div class="search-field">
+        <label><i class="fas fa-clock"></i> Saat</label>
+        <div class="input-wrap">
+          <i class="fas fa-clock"></i>
+          <input type="time" id="timeInput" value="12:00" />
+        </div>
+      </div>
+    </div>
+    <div class="search-actions">
+      <button class="btn btn-primary" onclick="travelToTime()">
+        <i class="fas fa-rocket"></i> Zamanda Yolculuk Yap
+      </button>
+      <button class="btn btn-secondary" onclick="getSnapshots()">
+        <i class="fas fa-list"></i> Tüm Anlık Görüntüler
+      </button>
+      <button class="btn btn-accent" onclick="travelRandom()">
+        <i class="fas fa-dice"></i> Rastgele
+      </button>
+    </div>
+    <div class="quick-links">
+      <span style="font-size: 12px; color: var(--text-secondary); margin-right: 4px;">Hızlı:</span>
+      <span class="quick-link" onclick="quickSearch('google.com')">Google</span>
+      <span class="quick-link" onclick="quickSearch('youtube.com')">YouTube</span>
+      <span class="quick-link" onclick="quickSearch('twitter.com')">Twitter</span>
+      <span class="quick-link" onclick="quickSearch('facebook.com')">Facebook</span>
+      <span class="quick-link" onclick="quickSearch('wikipedia.org')">Wikipedia</span>
+      <span class="quick-link" onclick="quickSearch('amazon.com')">Amazon</span>
+      <span class="quick-link" onclick="quickSearch('apple.com')">Apple</span>
+      <span class="quick-link" onclick="quickSearch('microsoft.com')">Microsoft</span>
+    </div>
+  </div>
+</section>
+
+<!-- Stats -->
+<section class="stats-section" id="statsSection" style="display: none;">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">📸</div>
+      <div class="stat-value" id="statSnapshots">0</div>
+      <div class="stat-label">Toplam Anlık Görüntü</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">📅</div>
+      <div class="stat-value" id="statFirstDate">-</div>
+      <div class="stat-label">İlk Arşiv Tarihi</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🕐</div>
+      <div class="stat-value" id="statLastDate">-</div>
+      <div class="stat-label">Son Arşiv Tarihi</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🌐</div>
+      <div class="stat-value" id="statStatus">-</div>
+      <div class="stat-label">Durum</div>
+    </div>
+  </div>
+</section>
+
+<!-- Time Slider -->
+<section class="time-slider-section" id="timeSliderSection">
+  <div class="time-slider-card">
+    <div class="time-slider-header">
+      <div class="time-slider-title"><i class="fas fa-sliders-h"></i> Zaman Çizelgesi</div>
+      <div class="time-slider-current" id="sliderCurrentDate">-</div>
+    </div>
+    <div class="time-slider-wrapper">
+      <input type="range" class="time-slider" id="timeSlider" min="0" max="100" value="0" />
+      <div class="time-labels">
+        <span id="sliderMinLabel">-</span>
+        <span id="sliderMaxLabel">-</span>
+      </div>
+    </div>
+    <div class="playback-controls">
+      <button class="playback-btn" onclick="sliderStep(-1)" title="Önceki"><i class="fas fa-step-backward"></i></button>
+      <button class="playback-btn" onclick="sliderStep(-5)" title="5 Geri"><i class="fas fa-backward"></i></button>
+      <button class="playback-btn play-pause" id="playPauseBtn" onclick="togglePlayback()" title="Oynat/Durdur"><i class="fas fa-play"></i></button>
+      <button class="playback-btn" onclick="sliderStep(5)" title="5 İleri"><i class="fas fa-forward"></i></button>
+      <button class="playback-btn" onclick="sliderStep(1)" title="Sonraki"><i class="fas fa-step-forward"></i></button>
+    </div>
+  </div>
+</section>
+
+<!-- Calendar Heatmap -->
+<section class="calendar-section" id="calendarSection">
+  <div class="calendar-card">
+    <div class="calendar-title"><i class="fas fa-calendar-days"></i> Arşiv Takvimi</div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+  </div>
+</section>
+
+<!-- Browser Frame -->
+<section class="browser-section" id="browserSection">
+  <div class="browser-frame">
+    <div class="browser-toolbar">
+      <div class="browser-dots">
+        <div class="browser-dot red"></div>
+        <div class="browser-dot yellow"></div>
+        <div class="browser-dot green"></div>
+      </div>
+      <div class="browser-nav">
+        <button onclick="navigateBack()" id="backBtn" disabled><i class="fas fa-arrow-left"></i></button>
+        <button onclick="navigateForward()" id="forwardBtn" disabled><i class="fas fa-arrow-right"></i></button>
+        <button onclick="refreshPage()" id="refreshBtn"><i class="fas fa-rotate-right"></i></button>
+      </div>
+      <div class="browser-url-bar">
+        <span class="archive-badge" id="archiveBadge" style="display:none;">ARŞİV</span>
+        <i class="fas fa-lock"></i>
+        <span id="currentUrl">Bir web sitesi adresi girin ve zamanda yolculuk yapın</span>
+      </div>
+      <div class="browser-time-info" id="browserTimeInfo" style="display:none;">
+        <i class="fas fa-clock-rotate-left"></i>
+        <span id="browserTimestamp">-</span>
+      </div>
+    </div>
+    <div class="browser-placeholder" id="browserPlaceholder">
+      <i class="fas fa-clock-rotate-left"></i>
+      <h3>Zaman Yolculuğuna Hazır</h3>
+      <p>Yukarıdan bir web sitesi adresi ve tarih girin, ardından "Zamanda Yolculuk Yap" butonuna tıklayın.</p>
+    </div>
+    <iframe class="browser-content" id="browserFrame" style="display:none;" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
+  </div>
+</section>
+
+<!-- Timeline / Snapshots -->
+<section class="results-section" id="resultsSection" style="display: none;">
+  <div class="results-header">
+    <div class="results-title"><i class="fas fa-timeline"></i> Zaman Çizelgesi</div>
+    <div class="results-count" id="resultsCount">0 anlık görüntü</div>
+  </div>
+  <div class="timeline" id="timelineContainer"></div>
+</section>
+
+<!-- History -->
+<section class="history-section" id="historySection">
+  <div class="history-card">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+      <div class="results-title"><i class="fas fa-history"></i> Arama Geçmişi</div>
+      <button class="btn btn-sm btn-secondary" onclick="clearHistory()"><i class="fas fa-trash"></i> Temizle</button>
+    </div>
+    <div class="history-list" id="historyList">
+      <div style="text-align: center; padding: 20px; color: var(--text-secondary); font-size: 13px;">
+        <i class="fas fa-inbox" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
+        Henüz arama yapılmadı
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <p>
+    <i class="fas fa-clock-rotate-left"></i> Zaman Yolculuğu Tarayıcısı &mdash;
+    <a href="https://web.archive.org" target="_blank">Wayback Machine</a> API kullanılarak oluşturuldu
+  </p>
+  <p style="margin-top: 6px;">
+    Web arşivi verileri <a href="https://archive.org" target="_blank">Internet Archive</a> tarafından sağlanmaktadır.
+  </p>
+</footer>
+
+<script>
+// ===== State =====
+let currentSnapshots = [];
+let currentUrl = '';
+let currentTimestamp = '';
+let navigationHistory = [];
+let navIndex = -1;
+let searchHistory = JSON.parse(localStorage.getItem('wayback_history') || '[]');
+let playbackInterval = null;
+let isPlaying = false;
+
+// ===== Init =====
+document.addEventListener('DOMContentLoaded', () => {
+  // Set default date to 5 years ago
+  const fiveYearsAgo = new Date();
+  fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
+  document.getElementById('dateInput').value = fiveYearsAgo.toISOString().split('T')[0];
+
+  // Enter key listener
+  document.getElementById('urlInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') travelToTime();
+  });
+
+  renderHistory();
+});
+
+// ===== Core Functions =====
+
+function normalizeUrl(url) {
+  url = url.trim();
+  if (!url) return '';
+  if (!/^https?:\/\//i.test(url)) {
+    url = 'http://' + url;
+  }
+  return url;
+}
+
+function formatTimestamp(ts) {
+  if (!ts || ts.length < 14) return ts;
+  const year = ts.substring(0, 4);
+  const month = ts.substring(4, 6);
+  const day = ts.substring(6, 8);
+  const hour = ts.substring(8, 10);
+  const min = ts.substring(10, 12);
+  const sec = ts.substring(12, 14);
+  return `${day}.${month}.${year} ${hour}:${min}:${sec}`;
+}
+
+function dateToTimestamp(dateStr, timeStr) {
+  const d = dateStr.replace(/-/g, '');
+  const t = (timeStr || '12:00').replace(/:/g, '') + '00';
+  return d + t;
+}
+
+function showLoading(text) {
+  document.getElementById('loadingText').textContent = text || 'Yükleniyor...';
+  document.getElementById('loadingOverlay').classList.add('visible');
+}
+
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('visible');
+}
+
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  const icons = { success: 'check-circle', error: 'exclamation-circle', info: 'info-circle' };
+  toast.innerHTML = `<i class="fas fa-${icons[type] || 'info-circle'}"></i> ${message}`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(100%)';
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
+
+// ===== Wayback Machine API =====
+
+async function travelToTime() {
+  const url = normalizeUrl(document.getElementById('urlInput').value);
+  const date = document.getElementById('dateInput').value;
+  const time = document.getElementById('timeInput').value;
+
+  if (!url) {
+    showToast('Lütfen bir web sitesi adresi girin', 'error');
+    return;
+  }
+
+  if (!date) {
+    showToast('Lütfen bir tarih seçin', 'error');
+    return;
+  }
+
+  const timestamp = dateToTimestamp(date, time);
+  showLoading('Zaman yolculuğu başlatılıyor...');
+
+  try {
+    // Use Wayback Machine availability API
+    const apiUrl = `https://archive.org/wayback/available?url=${encodeURIComponent(url)}&timestamp=${timestamp}`;
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+
+    if (data.archived_snapshots && data.archived_snapshots.closest) {
+      const snapshot = data.archived_snapshots.closest;
+      currentUrl = url;
+      currentTimestamp = snapshot.timestamp;
+
+      loadInBrowser(snapshot.url, snapshot.timestamp, url);
+      addToHistory(url, snapshot.timestamp);
+      showToast('Zaman yolculuğu başarılı!', 'success');
+
+      // Also fetch all snapshots
+      fetchAllSnapshots(url);
+    } else {
+      hideLoading();
+      showToast('Bu tarih için arşiv bulunamadı. Farklı bir tarih deneyin.', 'error');
+    }
+  } catch (error) {
+    hideLoading();
+    showToast('Bir hata oluştu: ' + error.message, 'error');
+  }
+}
+
+async function getSnapshots() {
+  const url = normalizeUrl(document.getElementById('urlInput').value);
+  if (!url) {
+    showToast('Lütfen bir web sitesi adresi girin', 'error');
+    return;
+  }
+
+  showLoading('Arşiv anlık görüntüleri aranıyor...');
+  await fetchAllSnapshots(url);
+}
+
+async function fetchAllSnapshots(url) {
+  try {
+    // CDX API to get all snapshots
+    const cdxUrl = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(url)}&output=json&limit=200&fl=timestamp,original,statuscode,mimetype,length&collapse=timestamp:8`;
+    const response = await fetch(cdxUrl);
+    const data = await response.json();
+
+    hideLoading();
+
+    if (data.length <= 1) {
+      showToast('Bu site için arşiv bulunamadı', 'error');
+      return;
+    }
+
+    // First row is headers
+    const headers = data[0];
+    const snapshots = data.slice(1).map(row => {
+      const obj = {};
+      headers.forEach((h, i) => obj[h] = row[i]);
+      return obj;
+    });
+
+    currentSnapshots = snapshots;
+    renderTimeline(snapshots, url);
+    renderStats(snapshots);
+    setupTimeSlider(snapshots, url);
+
+    document.getElementById('statsSection').style.display = '';
+    document.getElementById('resultsSection').style.display = '';
+    document.getElementById('timeSliderSection').style.display = '';
+
+  } catch (error) {
+    hideLoading();
+    showToast('Anlık görüntüler yüklenemedi: ' + error.message, 'error');
+  }
+}
+
+function loadInBrowser(archiveUrl, timestamp, originalUrl) {
+  const frame = document.getElementById('browserFrame');
+  const placeholder = document.getElementById('browserPlaceholder');
+
+  frame.style.display = 'block';
+  placeholder.style.display = 'none';
+
+  frame.src = archiveUrl;
+
+  // Update URL bar
+  document.getElementById('currentUrl').textContent = originalUrl;
+  document.getElementById('archiveBadge').style.display = '';
+  document.getElementById('browserTimeInfo').style.display = '';
+  document.getElementById('browserTimestamp').textContent = formatTimestamp(timestamp);
+
+  // Navigation history
+  navigationHistory = navigationHistory.slice(0, navIndex + 1);
+  navigationHistory.push({ url: archiveUrl, timestamp, originalUrl });
+  navIndex = navigationHistory.length - 1;
+  updateNavButtons();
+
+  frame.onload = () => hideLoading();
+
+  // Fallback hide loading after 5s
+  setTimeout(hideLoading, 5000);
+}
+
+// ===== Rendering =====
+
+function renderTimeline(snapshots, url) {
+  const container = document.getElementById('timelineContainer');
+  const maxShow = 50;
+  const shown = snapshots.slice(0, maxShow);
+
+  container.innerHTML = shown.map(snap => {
+    const statusClass = snap.statuscode === '200' ? 'status-200' :
+      (snap.statuscode === '301' || snap.statuscode === '302') ? 'status-301' : 'status-error';
+    return `
+      <div class="timeline-item" onclick="loadSnapshot('${snap.timestamp}', '${url}')">
+        <div class="timeline-dot"></div>
+        <div class="timeline-card">
+          <div class="timeline-date">${formatTimestamp(snap.timestamp)}</div>
+          <div class="timeline-url">${snap.original || url}</div>
+          <span class="timeline-status ${statusClass}">HTTP ${snap.statuscode}</span>
+          ${snap.length ? `<span class="timeline-status" style="background: rgba(108,92,231,0.15); color: var(--primary-light); margin-left: 4px;">${formatBytes(parseInt(snap.length))}</span>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  if (snapshots.length > maxShow) {
+    container.innerHTML += `<div style="text-align: center; padding: 16px; color: var(--text-secondary); font-size: 13px;">
+      ...ve ${snapshots.length - maxShow} anlık görüntü daha
+    </div>`;
+  }
+
+  document.getElementById('resultsCount').textContent = `${snapshots.length} anlık görüntü`;
+}
+
+function renderStats(snapshots) {
+  document.getElementById('statSnapshots').textContent = snapshots.length.toLocaleString();
+
+  if (snapshots.length > 0) {
+    const first = snapshots[0].timestamp;
+    const last = snapshots[snapshots.length - 1].timestamp;
+    document.getElementById('statFirstDate').textContent = formatTimestamp(first).substring(0, 10);
+    document.getElementById('statLastDate').textContent = formatTimestamp(last).substring(0, 10);
+
+    const okCount = snapshots.filter(s => s.statuscode === '200').length;
+    const pct = Math.round((okCount / snapshots.length) * 100);
+    document.getElementById('statStatus').textContent = `${pct}%`;
+  }
+}
+
+function setupTimeSlider(snapshots, url) {
+  const slider = document.getElementById('timeSlider');
+  slider.max = snapshots.length - 1;
+  slider.value = 0;
+
+  const firstTs = snapshots[0].timestamp;
+  const lastTs = snapshots[snapshots.length - 1].timestamp;
+  document.getElementById('sliderMinLabel').textContent = formatTimestamp(firstTs).substring(0, 10);
+  document.getElementById('sliderMaxLabel').textContent = formatTimestamp(lastTs).substring(0, 10);
+  document.getElementById('sliderCurrentDate').textContent = formatTimestamp(firstTs);
+
+  slider.oninput = () => {
+    const idx = parseInt(slider.value);
+    const snap = snapshots[idx];
+    document.getElementById('sliderCurrentDate').textContent = formatTimestamp(snap.timestamp);
+  };
+
+  slider.onchange = () => {
+    const idx = parseInt(slider.value);
+    const snap = snapshots[idx];
+    loadSnapshot(snap.timestamp, url);
+  };
+}
+
+function loadSnapshot(timestamp, url) {
+  showLoading('Arşiv yükleniyor...');
+  const archiveUrl = `https://web.archive.org/web/${timestamp}/${url}`;
+  currentTimestamp = timestamp;
+  currentUrl = url;
+  loadInBrowser(archiveUrl, timestamp, url);
+  addToHistory(url, timestamp);
+}
+
+// ===== Playback =====
+
+function togglePlayback() {
+  if (isPlaying) {
+    clearInterval(playbackInterval);
+    isPlaying = false;
+    document.getElementById('playPauseBtn').innerHTML = '<i class="fas fa-play"></i>';
+  } else {
+    isPlaying = true;
+    document.getElementById('playPauseBtn').innerHTML = '<i class="fas fa-pause"></i>';
+    playbackInterval = setInterval(() => {
+      sliderStep(1);
+      const slider = document.getElementById('timeSlider');
+      if (parseInt(slider.value) >= parseInt(slider.max)) {
+        togglePlayback();
+      }
+    }, 3000);
+  }
+}
+
+function sliderStep(delta) {
+  const slider = document.getElementById('timeSlider');
+  const newVal = Math.max(0, Math.min(parseInt(slider.max), parseInt(slider.value) + delta));
+  slider.value = newVal;
+
+  if (currentSnapshots.length > 0) {
+    const snap = currentSnapshots[newVal];
+    document.getElementById('sliderCurrentDate').textContent = formatTimestamp(snap.timestamp);
+    const url = normalizeUrl(document.getElementById('urlInput').value);
+    loadSnapshot(snap.timestamp, url);
+  }
+}
+
+// ===== Navigation =====
+
+function navigateBack() {
+  if (navIndex > 0) {
+    navIndex--;
+    const entry = navigationHistory[navIndex];
+    const frame = document.getElementById('browserFrame');
+    frame.src = entry.url;
+    document.getElementById('currentUrl').textContent = entry.originalUrl;
+    document.getElementById('browserTimestamp').textContent = formatTimestamp(entry.timestamp);
+    updateNavButtons();
+  }
+}
+
+function navigateForward() {
+  if (navIndex < navigationHistory.length - 1) {
+    navIndex++;
+    const entry = navigationHistory[navIndex];
+    const frame = document.getElementById('browserFrame');
+    frame.src = entry.url;
+    document.getElementById('currentUrl').textContent = entry.originalUrl;
+    document.getElementById('browserTimestamp').textContent = formatTimestamp(entry.timestamp);
+    updateNavButtons();
+  }
+}
+
+function refreshPage() {
+  const frame = document.getElementById('browserFrame');
+  if (frame.src) {
+    showLoading('Sayfa yenileniyor...');
+    frame.src = frame.src;
+    setTimeout(hideLoading, 3000);
+  }
+}
+
+function updateNavButtons() {
+  document.getElementById('backBtn').disabled = navIndex <= 0;
+  document.getElementById('forwardBtn').disabled = navIndex >= navigationHistory.length - 1;
+}
+
+// ===== Quick Actions =====
+
+function quickSearch(domain) {
+  document.getElementById('urlInput').value = domain;
+  travelToTime();
+}
+
+function travelRandom() {
+  const sites = ['google.com', 'youtube.com', 'twitter.com', 'facebook.com', 'wikipedia.org',
+    'amazon.com', 'apple.com', 'microsoft.com', 'yahoo.com', 'ebay.com', 'reddit.com',
+    'myspace.com', 'geocities.com', 'netscape.com', 'altavista.com', 'lycos.com'];
+  const randomSite = sites[Math.floor(Math.random() * sites.length)];
+
+  // Random date between 2000 and 2020
+  const year = 2000 + Math.floor(Math.random() * 20);
+  const month = String(1 + Math.floor(Math.random() * 12)).padStart(2, '0');
+  const day = String(1 + Math.floor(Math.random() * 28)).padStart(2, '0');
+
+  document.getElementById('urlInput').value = randomSite;
+  document.getElementById('dateInput').value = `${year}-${month}-${day}`;
+  travelToTime();
+}
+
+// ===== History =====
+
+function addToHistory(url, timestamp) {
+  const entry = { url, timestamp, viewedAt: new Date().toISOString() };
+  searchHistory = searchHistory.filter(h => !(h.url === url && h.timestamp === timestamp));
+  searchHistory.unshift(entry);
+  if (searchHistory.length > 50) searchHistory = searchHistory.slice(0, 50);
+  localStorage.setItem('wayback_history', JSON.stringify(searchHistory));
+  renderHistory();
+}
+
+function renderHistory() {
+  const container = document.getElementById('historyList');
+  const section = document.getElementById('historySection');
+
+  if (searchHistory.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = '';
+  container.innerHTML = searchHistory.map((h, i) => `
+    <div class="history-item" onclick="loadFromHistory(${i})">
+      <div class="history-favicon"><i class="fas fa-globe"></i></div>
+      <div class="history-info">
+        <div class="history-url">${h.url}</div>
+        <div class="history-time">${formatTimestamp(h.timestamp)} &mdash; ${new Date(h.viewedAt).toLocaleString('tr-TR')}</div>
+      </div>
+      <div class="history-remove" onclick="event.stopPropagation(); removeHistory(${i})">
+        <i class="fas fa-times"></i>
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadFromHistory(index) {
+  const entry = searchHistory[index];
+  document.getElementById('urlInput').value = entry.url;
+  loadSnapshot(entry.timestamp, entry.url);
+}
+
+function removeHistory(index) {
+  searchHistory.splice(index, 1);
+  localStorage.setItem('wayback_history', JSON.stringify(searchHistory));
+  renderHistory();
+}
+
+function clearHistory() {
+  searchHistory = [];
+  localStorage.setItem('wayback_history', JSON.stringify(searchHistory));
+  renderHistory();
+  showToast('Arama geçmişi temizlendi', 'info');
+}
+
+// ===== Utilities =====
+
+function formatBytes(bytes) {
+  if (!bytes || isNaN(bytes)) return '-';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(1) + ' MB';
+}
+</script>
+</body>
+</html>
