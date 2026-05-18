@@ -1204,8 +1204,9 @@ document.addEventListener('DOMContentLoaded', () => {
 function normalizeUrl(url) {
   url = url.trim();
   if (!url) return '';
-  url = url.replace(/^(https?:\/\/)?(www\.)?/, '');
-  url = url.replace(/\/+$/, '');
+  if (!/^https?:\/\//i.test(url)) {
+    url = 'http://' + url;
+  }
   return url;
 }
 
